@@ -5,8 +5,9 @@ import { modelSlides } from './modelSlides.js';
 import { cloudSlides } from './cloudSlides.js';
 import { hasilSlides } from './hasilSlides.js';
 import { penutupSlides } from './penutupSlides.js';
+import { NASKAH } from './naskah.js';
 
-export const slides = [
+const base = [
   ...pembukaSlides,
   ...faSlides,
   ...baSlides,
@@ -15,3 +16,6 @@ export const slides = [
   ...hasilSlides,
   ...penutupSlides
 ];
+
+/** Menempelkan naskah narasi ke tiap slide berdasarkan id. */
+export const slides = base.map((slide) => ({ ...slide, script: NASKAH[slide.id] ?? [] }));

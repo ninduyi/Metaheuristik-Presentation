@@ -20,6 +20,9 @@
       <button type="button" id="btn-overview" title="Semua slide (G)" aria-label="Semua slide">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
       </button>
+      <button type="button" id="btn-script" aria-pressed="false" title="Naskah narasi (T)" aria-label="Naskah narasi">
+        <svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M8.5 8h7M8.5 11.5h7M8.5 15h4"/><path d="M15 19.5l4.5-4.5 1.5 1.5-4.5 4.5-2 .5z" fill="currentColor" stroke="none"/></svg>
+      </button>
       <button type="button" id="btn-notes" aria-pressed="false" title="Catatan presenter (N)" aria-label="Catatan presenter">
         <svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg>
       </button>
@@ -48,6 +51,9 @@
       <div id="notes-content" class="sheet-body"></div>
     </aside>
 
+    <!-- Kertas naskah: lembar krem yang bisa digeser, diperbesar hurufnya, dan dibuka di jendela lain -->
+    <aside id="script-paper" class="paper hidden" aria-label="Naskah narasi"></aside>
+
     <section id="overview" class="overview hidden" aria-label="Semua slide">
       <div class="overview-grid"></div>
     </section>
@@ -66,7 +72,8 @@
           <dt><kbd>P</kbd></dt><dd>Mulai atau jeda simulasi</dd>
           <dt><kbd>S</kbd></dt><dd>Satu langkah simulasi</dd>
           <dt><kbd>R</kbd></dt><dd>Reset simulasi</dd>
-          <dt><kbd>N</kbd></dt><dd>Catatan presenter</dd>
+          <dt><kbd>T</kbd></dt><dd>Kertas naskah narasi</dd>
+          <dt><kbd>N</kbd></dt><dd>Catatan teknis presenter</dd>
           <dt><kbd>F</kbd></dt><dd>Layar penuh</dd>
           <dt><kbd>Esc</kbd></dt><dd>Tutup panel</dd>
         </dl>

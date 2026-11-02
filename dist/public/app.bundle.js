@@ -8,6 +8,169 @@
   var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
   var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 
+  // src/ui/script.js
+  var SIZE_KEY = "fa_ba_deck_script_size_v1";
+  var SIZE_MIN = 20;
+  var SIZE_MAX = 56;
+  var ICON = {
+    close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    popout: '<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>'
+  };
+  var markup = (solo) => `
+  <header class="paper-head">
+    <b>Naskah</b>
+    <span class="paper-where"></span>
+    <div class="paper-tools">
+      <button type="button" data-act="smaller" title="Huruf lebih kecil" aria-label="Huruf lebih kecil">A\u2212</button>
+      <button type="button" data-act="bigger" title="Huruf lebih besar" aria-label="Huruf lebih besar">A+</button>
+      ${solo ? "" : `<button type="button" data-act="popout" title="Buka di jendela terpisah" aria-label="Buka di jendela terpisah">${ICON.popout}</button>`}
+      ${solo ? "" : `<button type="button" data-act="close" title="Tutup naskah (T)" aria-label="Tutup naskah">${ICON.close}</button>`}
+    </div>
+  </header>
+  <div class="paper-body"></div>`;
+  var _ScriptPaper_instances, loadSize_fn, saveSize_fn, wire_fn, enableDrag_fn, fill_fn;
+  var ScriptPaper = class {
+    /** @param {{getState:()=>{slide:object,index:number,total:number,beat:number}, scale:()=>number, goBeat:(d:number)=>void}} host */
+    constructor(host) {
+      __privateAdd(this, _ScriptPaper_instances);
+      this.host = host;
+      this.root = document.getElementById("script-paper");
+      this.size = __privateMethod(this, _ScriptPaper_instances, loadSize_fn).call(this);
+      this.popup = null;
+      this.drag = null;
+      this.root.innerHTML = markup(false);
+      __privateMethod(this, _ScriptPaper_instances, wire_fn).call(this, this.root, false);
+      __privateMethod(this, _ScriptPaper_instances, enableDrag_fn).call(this);
+      this.setOpen(false);
+    }
+    get isOpen() {
+      return !this.root.classList.contains("hidden");
+    }
+    setOpen(open) {
+      this.root.classList.toggle("hidden", !open);
+      document.getElementById("btn-script")?.setAttribute("aria-pressed", String(open));
+      if (open) this.update();
+    }
+    toggle() {
+      this.setOpen(!this.isOpen);
+    }
+    /** Dipanggil presenter setiap slide atau beat berubah. */
+    update() {
+      if (this.isOpen) __privateMethod(this, _ScriptPaper_instances, fill_fn).call(this, this.root, this.size);
+      if (this.popup && !this.popup.closed) __privateMethod(this, _ScriptPaper_instances, fill_fn).call(this, this.popup.document.getElementById("paper-solo"), Math.round(this.size * 0.9));
+    }
+    openWindow() {
+      if (this.popup && !this.popup.closed) {
+        this.popup.focus();
+        return;
+      }
+      const win = window.open("", "naskah-presenter", "width=980,height=720");
+      if (!win) return;
+      const css = [...document.querySelectorAll('link[rel="stylesheet"]')].map((l) => `<link rel="stylesheet" href="${l.href}">`).join("");
+      win.document.open();
+      win.document.write(
+        `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><title>Naskah presenter</title>${css}</head><body class="paper-window"><div id="paper-solo" class="paper paper-solo">${markup(true)}</div></body></html>`
+      );
+      win.document.close();
+      this.popup = win;
+      const solo = win.document.getElementById("paper-solo");
+      __privateMethod(this, _ScriptPaper_instances, wire_fn).call(this, solo, true);
+      win.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
+          e.preventDefault();
+          this.host.goBeat(1);
+        } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+          e.preventDefault();
+          this.host.goBeat(-1);
+        }
+      });
+      win.addEventListener("load", () => this.update());
+      setTimeout(() => this.update(), 250);
+    }
+  };
+  _ScriptPaper_instances = new WeakSet();
+  loadSize_fn = function() {
+    try {
+      const n = Number(localStorage.getItem(SIZE_KEY));
+      if (n >= SIZE_MIN && n <= SIZE_MAX) return n;
+    } catch {
+    }
+    return 32;
+  };
+  saveSize_fn = function() {
+    try {
+      localStorage.setItem(SIZE_KEY, String(this.size));
+    } catch {
+    }
+  };
+  wire_fn = function(root, solo) {
+    root.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-act]");
+      if (!btn) return;
+      const act = btn.dataset.act;
+      if (act === "smaller" || act === "bigger") {
+        this.size = Math.min(SIZE_MAX, Math.max(SIZE_MIN, this.size + (act === "bigger" ? 4 : -4)));
+        __privateMethod(this, _ScriptPaper_instances, saveSize_fn).call(this);
+        this.update();
+      } else if (act === "close") this.setOpen(false);
+      else if (act === "popout") this.openWindow();
+    });
+    if (solo) return;
+  };
+  /** Menggeser kertas dengan menyeret kepalanya. Koordinat dihitung dalam satuan panggung. */
+  enableDrag_fn = function() {
+    const head = this.root.querySelector(".paper-head");
+    head.addEventListener("pointerdown", (e) => {
+      if (e.target.closest("button")) return;
+      const k = this.host.scale() || 1;
+      this.drag = { x: e.clientX, y: e.clientY, left: this.root.offsetLeft, top: this.root.offsetTop, k };
+      head.setPointerCapture(e.pointerId);
+      this.root.classList.add("dragging");
+    });
+    head.addEventListener("pointermove", (e) => {
+      if (!this.drag) return;
+      const d = this.drag;
+      const left = Math.max(0, Math.min(1920 - 160, d.left + (e.clientX - d.x) / d.k));
+      const top = Math.max(0, Math.min(1080 - 80, d.top + (e.clientY - d.y) / d.k));
+      this.root.style.left = `${left}px`;
+      this.root.style.top = `${top}px`;
+    });
+    const stop = () => {
+      this.drag = null;
+      this.root.classList.remove("dragging");
+    };
+    head.addEventListener("pointerup", stop);
+    head.addEventListener("pointercancel", stop);
+  };
+  /** Mengisi satu lembar (utama atau jendela terpisah) dengan keadaan terbaru. */
+  fill_fn = function(root, sizePx) {
+    const { slide, index, total, beat } = this.host.getState();
+    const lines = slide.script?.length ? slide.script : ["(Belum ada naskah untuk slide ini.)"];
+    const body = root.querySelector(".paper-body");
+    const active = Math.min(beat, lines.length - 1);
+    const signature = `${slide.id}|${lines.length}`;
+    if (body.dataset.sig !== signature) {
+      body.innerHTML = lines.map(
+        (text, i) => `<p class="paper-line" data-beat="${i}">${lines.length > 1 ? `<i>${i + 1}</i>` : ""}<span></span></p>`
+      ).join("");
+      body.querySelectorAll(".paper-line span").forEach((el, i) => el.textContent = lines[i]);
+      body.dataset.sig = signature;
+      body.scrollTop = 0;
+    }
+    root.style.setProperty("--paper-size", `${sizePx}px`);
+    root.querySelector(".paper-where").textContent = `${String(index + 1).padStart(2, "0")}/${total} \xB7 ${slide.title}${lines.length > 1 ? ` \xB7 beat ${active + 1}/${lines.length}` : ""}`;
+    const rows = [...body.querySelectorAll(".paper-line")];
+    rows.forEach((row, i) => {
+      row.classList.toggle("on", i === active);
+      row.classList.toggle("done", i < active);
+    });
+    const target = rows[active];
+    if (target) {
+      const want = target.offsetTop - body.clientHeight * 0.18;
+      body.scrollTo({ top: Math.max(0, want), behavior: "smooth" });
+    }
+  };
+
   // src/ui/presenter.js
   var STAGE_W = 1920;
   var STAGE_H = 1080;
@@ -32,6 +195,11 @@
       this.notes = $("presenter-notes");
       this.overview = $("overview");
       this.help = $("shortcuts-modal");
+      this.paper = new ScriptPaper({
+        getState: () => ({ slide: this.slides[this.index], index: this.index, total: this.slides.length, beat: this.beat }),
+        scale: () => this.scale,
+        goBeat: (d) => d > 0 ? this.next() : this.prev()
+      });
     }
     start() {
       __privateMethod(this, _Presenter_instances, buildSpine_fn).call(this);
@@ -181,6 +349,7 @@
   bind_fn = function() {
     $("btn-prev").addEventListener("click", (e) => this.prev(e));
     $("btn-next").addEventListener("click", (e) => this.next(e));
+    $("btn-script").addEventListener("click", () => this.paper.toggle());
     $("btn-notes").addEventListener("click", () => this.toggleNotes());
     $("btn-close-notes").addEventListener("click", () => this.toggleNotes(false));
     $("btn-overview").addEventListener("click", () => __privateMethod(this, _Presenter_instances, toggle_fn).call(this, this.overview));
@@ -215,6 +384,7 @@
       __privateMethod(this, _Presenter_instances, toggle_fn).call(this, this.help, false);
       __privateMethod(this, _Presenter_instances, toggle_fn).call(this, this.overview, false);
       this.toggleNotes(false);
+      this.paper.setOpen(false);
       if (__privateMethod(this, _Presenter_instances, typing_fn).call(this, e.target)) e.target.blur();
       return;
     }
@@ -231,6 +401,7 @@
     else if (key === "End") run(() => this.goTo(this.slides.length - 1));
     else if (/^[1-9]$/.test(key) && this.chapters[Number(key) - 1]) run(() => this.goTo(this.chapters[Number(key) - 1].indices[0]));
     else if (key === "f") run(() => this.toggleFullscreen());
+    else if (key === "t") run(() => this.paper.toggle());
     else if (key === "n") run(() => this.toggleNotes());
     else if (key === "g" || key === "o") run(() => __privateMethod(this, _Presenter_instances, toggle_fn).call(this, this.overview));
     else if (key === "?" || key === "h") run(() => __privateMethod(this, _Presenter_instances, toggle_fn).call(this, this.help));
@@ -267,6 +438,7 @@
     });
     const chapter = this.slides[this.index].chapter.id;
     this.spineChapters.forEach((c) => c.classList.toggle("current", c.dataset.chapter === chapter));
+    this.paper?.update();
     this.counterEl.textContent = `${String(this.index + 1).padStart(2, "0")} / ${this.slides.length}`;
   };
 
@@ -1480,7 +1652,7 @@
   }
   function drift(i, t, box = { x: 80, y: 330, w: 1760, h: 640 }) {
     const home = { x: box.x + hash01(i + 3) * box.w, y: box.y + hash01(i + 40) * box.h };
-    const sway = (k, base, spread) => base + hash01(i + k) * spread;
+    const sway = (k, base2, spread) => base2 + hash01(i + k) * spread;
     return {
       x: home.x + Math.sin(t * sway(0, 0.35, 0.45) + i) * sway(9, 40, 70),
       y: home.y + Math.cos(t * sway(5, 0.3, 0.4) + i * 2) * sway(11, 30, 55)
@@ -1502,8 +1674,6 @@
   var BA_COLOR = "#a78bfa";
 
   // src/slides/pembukaSlides.js
-  var TEAM_STORAGE_KEY = "fa_ba_deck_team_line_v1";
-  var DEFAULT_TEAM = "Klik untuk isi nama kelompok & NRP";
   var TASKS = generateTasks(16, 2026);
   var VMS = DEFAULT_VMS;
   var RR = roundRobin(TASKS, VMS);
@@ -1543,28 +1713,12 @@
     title: "Judul",
     notes: `
     <p>Sapa audiens. Mulai dari pertanyaan sehari-hari: kalau ada banyak pekerjaan dan beberapa komputer yang kecepatannya beda, pekerjaan mana ditaruh di komputer mana?</p>
-    <p>Hari ini kita bandingkan dua jawaban dari alam: kunang-kunang (Firefly Algorithm) dan kelelawar (Bat Algorithm). Keduanya diuji pada beban kerja dan fungsi tujuan yang sama.</p>
-    <p>Klik baris nama di bawah judul untuk mengisi nama kelompok. Isinya tersimpan otomatis di browser ini.</p>`,
+    <p>Hari ini kita bandingkan dua jawaban dari alam: kunang-kunang (Firefly Algorithm) dan kelelawar (Bat Algorithm). Keduanya diuji pada beban kerja dan fungsi tujuan yang sama.</p>`,
     mount(container, ctx) {
-      let team = DEFAULT_TEAM;
-      try {
-        const stored = localStorage.getItem(TEAM_STORAGE_KEY);
-        if (stored && stored.trim()) team = stored.trim();
-      } catch (_e) {
-      }
       const cleanup = mountStory(container, ctx, {
         tag: "Strategi Optimasi Komputasi Awan",
         beats: [{ title: "Firefly vs Bat", html: '<span class="c-fa">Firefly</span> <span class="c-vs">vs</span> <span class="c-ba">Bat</span>', sub: "Dua algoritma terinspirasi alam untuk menjadwalkan tugas di cloud." }],
-        draw: drawTitleScene,
-        extraHtml: `<div class="team" id="team-line" contenteditable="true" spellcheck="false" role="textbox" aria-label="Nama kelompok dan NRP"></div>`
-      });
-      const teamEl = container.querySelector("#team-line");
-      teamEl.textContent = team;
-      teamEl.addEventListener("input", () => {
-        try {
-          localStorage.setItem(TEAM_STORAGE_KEY, teamEl.textContent || "");
-        } catch (_e) {
-        }
+        draw: drawTitleScene
       });
       container.classList.add("hero");
       return cleanup;
@@ -1575,7 +1729,7 @@
   function drawProblemScene(ctx, { t, bt, beat }) {
     drawBackdrop(ctx, t, "blue");
     const tMax = RR.makespan * 1.12;
-    const dim = beat === 2 ? 0.22 : 1;
+    const dim = 1;
     ctx.save();
     ctx.globalAlpha = dim;
     if (beat === 0) {
@@ -1608,14 +1762,14 @@
           weight: 700
         });
       });
-    } else {
+    } else if (beat === 1) {
       drawSchedule(ctx, SCHED_RECT, TASKS, VMS, RR_LAYOUT, {
         tMax,
         laneColor: COLORS.blue,
         queue: { x: 140, y: QUEUE_Y },
-        appear: beat === 1 ? (idx) => clamp01((bt - 0.3 - 0.26 * idx) / 0.85) : () => 1,
-        makespan: beat === 1 && bt > 5.6 ? RR.makespan : beat === 2 ? RR.makespan : null,
-        ideal: beat >= 1 && bt > 6.4 ? IDEAL : beat === 2 ? IDEAL : null
+        appear: (idx) => clamp01((bt - 0.3 - 0.26 * idx) / 0.85),
+        makespan: bt > 5.6 ? RR.makespan : null,
+        ideal: bt > 6.4 ? IDEAL : null
       });
     }
     ctx.restore();
@@ -1639,28 +1793,90 @@
         });
       }
     }
-    if (beat === 2) {
-      const grow = seg(bt, 0.1, 1.8, easeOut);
-      const n = Math.round(TOTAL_COMBOS * grow);
-      drawText(ctx, `4\xB9\u2076 = ${fmtInt(n)}`, 960, 590, { size: 150, align: "center", color: COLORS.gold, mono: true, weight: 800 });
-      drawText(ctx, "kemungkinan jadwal untuk hanya 16 tugas dan 4 VM", 960, 700, {
-        size: 44,
-        align: "center",
-        alpha: seg(bt, 1.2, 0.7, easeOut),
-        color: COLORS.ink
-      });
-      const gap = ((RR.makespan / IDEAL - 1) * 100).toFixed(0);
-      drawPill(ctx, `Round-Robin ${gap}% di atas batas bawah`, 960, 830, {
-        fill: COLORS.coral,
-        size: 34,
-        alpha: seg(bt, 2.4, 0.6, easeOut)
-      });
-      drawText(ctx, "Setiap tugas tambahan melipatgandakan pilihan: 32 tugas saja sudah 4\xB3\xB2 \u2248 1,8 \xD7 10\xB9\u2079 jadwal.", 960, 925, {
-        size: 30,
-        align: "center",
-        color: COLORS.muted,
-        alpha: seg(bt, 3.4, 0.7, easeOut)
-      });
+    if (beat === 2) drawBranchingTree(ctx, bt);
+  }
+  var TREE = { x0: 190, dx: 235, top: 360, bottom: 960, levels: 4 };
+  var TREE_COLORS = [COLORS.cyan, COLORS.purple, COLORS.pink, COLORS.gold];
+  var MS_PER_CHECK = 1;
+  var DAYS_ALL = TOTAL_COMBOS * MS_PER_CHECK / 864e5;
+  function treeNode(level, i) {
+    const n = 4 ** level;
+    return { x: TREE.x0 + level * TREE.dx, y: level === 0 ? (TREE.top + TREE.bottom) / 2 : TREE.top + (i + 0.5) * (TREE.bottom - TREE.top) / n };
+  }
+  function drawBranchingTree(ctx, bt) {
+    for (let level = 1; level <= TREE.levels; level++) {
+      const p = seg(bt, 0.2 + (level - 1) * 0.85, 0.85, easeOut);
+      if (p <= 0) continue;
+      const n = 4 ** level;
+      const small = level >= 4;
+      for (let i = 0; i < n; i++) {
+        const from = treeNode(level - 1, Math.floor(i / 4));
+        const to = treeNode(level, i);
+        const ex = from.x + (to.x - from.x) * p;
+        const ey = from.y + (to.y - from.y) * p;
+        ctx.strokeStyle = hexToRgba(TREE_COLORS[i % 4], small ? 0.34 : 0.62);
+        ctx.lineWidth = small ? 1 : level === 3 ? 1.6 : 2.6;
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+        if (!small && p > 0.9) {
+          ctx.fillStyle = TREE_COLORS[i % 4];
+          ctx.beginPath();
+          ctx.arc(to.x, to.y, level === 1 ? 9 : level === 2 ? 6 : 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      drawText(ctx, `tugas ${level}`, TREE.x0 + level * TREE.dx, TREE.top - 34, { size: 24, color: COLORS.muted, align: "center", weight: 700, alpha: p });
+      drawText(ctx, fmtInt(n), TREE.x0 + level * TREE.dx, TREE.bottom + 44, { size: 32, color: COLORS.gold, align: "center", mono: true, weight: 700, alpha: p });
+    }
+    const root = treeNode(0, 0);
+    drawGlow(ctx, root.x, root.y, 46, "rgba(251,191,36,0.5)");
+    ctx.fillStyle = COLORS.gold;
+    ctx.beginPath();
+    ctx.arc(root.x, root.y, 14, 0, Math.PI * 2);
+    ctx.fill();
+    drawText(ctx, "mulai", root.x, TREE.top - 34, { size: 24, color: COLORS.muted, align: "center", weight: 700 });
+    drawText(ctx, "jadwal", root.x, TREE.bottom + 44, { size: 24, color: COLORS.muted, align: "center", weight: 700 });
+    const dotsA = seg(bt, 4, 0.7, easeOut);
+    if (dotsA > 0) {
+      const lastX = TREE.x0 + TREE.levels * TREE.dx;
+      for (let k = 0; k < 3; k++) {
+        ctx.fillStyle = hexToRgba(COLORS.ink, 0.35 + 0.65 * Math.abs(Math.sin(bt * 2 + k)));
+        ctx.beginPath();
+        ctx.arc(lastX + 70 + k * 26, 660, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      drawText(ctx, "sampai tugas 16", lastX + 108, 710, { size: 25, color: COLORS.muted, align: "center", weight: 700, alpha: dotsA });
+    }
+    const cx = 1560;
+    const cy = 600;
+    const r = 150;
+    const clockA = seg(bt, 4.4, 0.6, easeOut);
+    if (clockA > 0) {
+      ctx.save();
+      ctx.globalAlpha *= clockA;
+      ctx.lineWidth = 22;
+      ctx.strokeStyle = "rgba(255,255,255,0.1)";
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+      const sweep = seg(bt, 4.8, 3.2, easeInOut);
+      ctx.strokeStyle = COLORS.coral;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * sweep * 0.92);
+      ctx.stroke();
+      ctx.restore();
+      const days = Math.round(DAYS_ALL * sweep);
+      drawText(ctx, `\xB1${days}`, cx, cy - 12, { size: 84, color: COLORS.coral, align: "center", mono: true, weight: 800, alpha: clockA });
+      drawText(ctx, "hari nonstop", cx, cy + 52, { size: 30, color: COLORS.ink, align: "center", weight: 700, alpha: clockA });
+      drawText(ctx, "kalau tiap jadwal dicek 1 milidetik", cx, cy + r + 62, { size: 25, color: COLORS.muted, align: "center", weight: 600, alpha: clockA });
+      drawText(ctx, `(tugas 16 \u2248 ${(TOTAL_COMBOS / 1e9).toFixed(1).replace(".", ",")} miliar jadwal)`, cx, cy + r + 98, { size: 22, color: COLORS.muted, align: "center", weight: 600, alpha: clockA });
+    }
+    const pillA = seg(bt, 8.2, 0.7, easeOut);
+    if (pillA > 0) {
+      drawPill(ctx, "FA dan BA di deck ini: sekitar 1.100 evaluasi", cx, 900, { fill: COLORS.lime, size: 28, alpha: pillA });
     }
   }
   var masalahSlide = {
@@ -1671,7 +1887,7 @@
     notes: `
     <p><b>Beat 1.</b> Ada 16 tugas dengan panjang berbeda (satuan MI, juta instruksi) dan 4 VM dengan kecepatan berbeda (85 sampai 175 MIPS). Waktu eksekusi satu tugas = MI dibagi MIPS.</p>
     <p><b>Beat 2.</b> Cara paling sederhana adalah Round-Robin: tugas dibagi bergiliran. Adil dari sisi jumlah, tapi tidak adil dari sisi waktu. VM paling lambat menerima jatah sama banyak, sehingga selesai paling akhir. Waktu selesai VM terakhir itulah <b>makespan</b>. Garis hijau adalah batas bawah ideal bila seluruh instruksi terbagi sempurna sesuai kecepatan VM.</p>
-    <p><b>Beat 3.</b> Mencoba semua jadwal tidak mungkin: 4 pangkat 16 sudah di atas empat miliar, dan angkanya meledak tiap tugas bertambah. Jadi kita butuh cara mencari yang cerdas. Itu pintu masuk ke metaheuristik.</p>`,
+    <p><b>Beat 3.</b> Pohon percabangan: tiap tugas membuka empat pilihan VM, jadi jumlah jadwal naik empat kali lipat per tugas (4, 16, 64, 256, dan seterusnya sampai tugas ke-16, sekitar 4,3 miliar). Bila satu jadwal dicek dalam satu milidetik, mengecek semuanya butuh hampir 50 hari nonstop. Pengaturan bawaan FA dan BA di deck ini hanya memakai sekitar 1.100 evaluasi (28 individu \xD7 40 iterasi, ditambah evaluasi awal). Jadi kita butuh cara mencari yang cerdas. Itu pintu masuk ke metaheuristik.</p>`,
     mount(container, ctx) {
       return mountStory(container, ctx, {
         tag: "1 \xB7 Latar belakang",
@@ -4736,8 +4952,91 @@
   };
   var penutupSlides = [ringkasSlide, penutupSlide, pustakaSlide];
 
+  // src/slides/naskah.js
+  var NASKAH = {
+    judul: [
+      "Halo semuanya. Hari ini saya akan membahas dua algoritma yang terinspirasi dari alam, yaitu Firefly Algorithm dan Bat Algorithm, dan bagaimana keduanya dipakai untuk menjadwalkan tugas di cloud. Sebelum masuk ke rumus, kita lihat dulu gambarnya. Tiap konsep akan saya tunjukkan lewat animasi dan simulasi yang bisa dijalankan langsung di slide ini."
+    ],
+    masalah: [
+      "Bayangkan ada enam belas tugas dengan panjang yang berbeda-beda, lalu ada empat mesin virtual yang kecepatannya juga tidak sama, dari 85 sampai 175 MIPS. Pertanyaan intinya sederhana. Tugas mana sebaiknya ditaruh di mesin mana. Waktu kerja satu tugas dihitung dari panjang tugas dibagi kecepatan mesin.",
+      "Cara paling gampang adalah Round-Robin, yaitu tugas dibagi bergiliran. Kelihatannya adil karena jumlahnya sama, tapi mesin yang paling lambat ikut kebagian jatah yang sama sehingga selesai paling akhir. Waktu selesai mesin terakhir inilah yang kita sebut makespan. Di sini Round-Robin berada sekitar 51 persen di atas batas bawah ideal, yaitu garis hijau.",
+      "Mungkin ada yang berpikir, coba saja semua kemungkinan. Masalahnya, tiap tugas punya empat pilihan mesin, jadi setiap tugas tambahan melipatkan jumlah jadwal empat kali. Pohon ini baru sampai tugas keempat dan sudah ada dua ratus lima puluh enam cabang. Untuk enam belas tugas, jumlahnya sekitar 4,3 miliar jadwal. Kalau satu jadwal dicek dalam satu milidetik, kita butuh hampir lima puluh hari nonstop. Karena itu kita perlu pencari yang cerdas, bukan pencoba semua."
+    ],
+    lanskap: [
+      "Sekarang bayangkan setiap jadwal sebagai satu titik di pegunungan, dan tingginya adalah waktu selesai. Pencari tunggal yang hanya mau turun akan berhenti di lembah terdekat. Itu yang disebut optimum lokal, sementara lembah yang lebih dalam tidak pernah ia lihat.",
+      "Metaheuristik memakai banyak pencari sekaligus dan membuat mereka saling memberi kabar. Satu pencari yang beruntung menemukan lembah yang dalam, lalu yang lain ikut bergerak ke sana.",
+      "Kuncinya ada di keseimbangan. Di awal kita menjelajah seluas mungkin supaya tidak terjebak, dan di akhir kita menelusuri dengan teliti supaya hasilnya rapi. Firefly dan Bat mengatur keseimbangan ini dengan cara yang berbeda, dan itulah inti perbandingan kita hari ini."
+    ],
+    "fa-inspirasi": [
+      "Firefly Algorithm terinspirasi dari kunang-kunang yang berkedip untuk saling memanggil. Di algoritma ini, satu kunang-kunang mewakili satu kandidat jadwal.",
+      "Terang redupnya cahaya mewakili kualitas solusi. Semakin bagus jadwalnya, semakin terang kunang-kunangnya. Jadi kecerahan di sini bukan sekadar hiasan.",
+      "Aturan mainnya, yang redup terbang mengejar yang lebih terang. Semakin jauh jaraknya, semakin lemah tarikannya, sama seperti cahaya yang memudar di kejauhan."
+    ],
+    "fa-karakter": [
+      "Ada tiga tombol pengatur di Firefly. Beta nol menentukan kuat tarikan saat jaraknya nol. Gamma menentukan seberapa cepat tarikan hilang karena jarak. Alpha mengatur lebar langkah acak setelah terbang. Saya geser slider-nya sekarang, dan kurva serta peragaan geraknya langsung ikut berubah. Kursor bisa digerakkan di grafik untuk memilih jarak tertentu."
+    ],
+    "fa-cara": [
+      "Langkah pertama, setiap kunang-kunang dihitung nilai fungsi tujuannya. Pada kasus kita nilainya makespan, dan makin kecil berarti makin terang.",
+      "Langkah kedua, setiap kunang-kunang yang redup melihat semua yang lebih terang darinya, lalu mengincar mereka sekaligus.",
+      "Langkah ketiga, tarikan melemah karena jarak. Tebal garis di layar menunjukkan kuat tarikan beta. Yang dekat menarik kuat, yang jauh hanya samar.",
+      "Langkah terakhir, kunang-kunang terbang mengikuti tarikan lalu bergoyang sedikit secara acak. Tarikan memberi arah, sedangkan langkah acak menjaga agar pencarian tetap menjelajah."
+    ],
+    "fa-sim": [
+      "Sekarang kita coba langsung. Tombol Mulai menjalankan animasi, Langkah maju satu tahap, dan Reset mengulang dari awal. Di kanan ada nilai terbaik dan grafik konvergensi. Saya bisa mengganti fungsi uji di dock bawah, dan membuka laci Parameter untuk mengubah parameter algoritma, jumlah populasi, kecepatan, sampai seed acaknya."
+    ],
+    "ba-inspirasi": [
+      "Bat Algorithm terinspirasi dari kelelawar yang berekolokasi. Kelelawar bersuara, lalu mendengar gemanya, dan dari gema itu ia tahu seberapa jauh mangsanya.",
+      "Saat mendekati mangsa, kelelawar mengirim pulsa lebih sering tapi dengan suara yang lebih pelan. Di algoritma, laju pulsa r naik dan kenyaringan A turun.",
+      "Satu kelelawar terbaik menjadi arah tujuan. Yang lain terbang menuju dia, lalu sesekali menjelajah di sekitarnya."
+    ],
+    "ba-karakter": [
+      "Di Bat ada dua nilai yang berubah seiring waktu. Kenyaringan A turun dan laju pulsa r naik. Ada empat tombol pengatur, yaitu A nol, r nol, alpha A, dan gamma r. Saya geser slider-nya, dan perhatikan bentuk kurva serta lingkaran gema di sebelah kanan."
+    ],
+    "ba-cara": [
+      "Pertama, setiap kelelawar terbang menuju yang terbaik. Frekuensi acak f menentukan seberapa jauh ia melangkah.",
+      "Kedua, kadang kelelawar menjelajah dekat x bintang. Kalau angka acak lebih besar dari r, titik percobaan diganti titik acak di sekitar kelelawar terbaik.",
+      "Ketiga, hanya yang lolos yang berpindah. Titik baru harus lebih baik dan lolos peluang yang ditentukan kenyaringan A. Kalau diterima, A turun dan r naik."
+    ],
+    "ba-sim": [
+      "Kontrolnya sama dengan Firefly supaya mudah dibandingkan. Tanda centang menandai titik percobaan yang diterima dan tanda silang menandai yang ditolak. Perhatikan bagaimana kelelawar cenderung berkumpul ke satu titik terbaik."
+    ],
+    "model-fitness": [
+      "Sekarang model matematikanya. Satu posisi kandidat hanyalah satu daftar angka, satu angka untuk tiap tugas.",
+      "Angka itu dibulatkan ke bawah lalu ditambah satu, hasilnya nomor VM. Geser sedikit saja angkanya dan satu tugas bisa pindah mesin.",
+      "Selanjutnya tiap VM menjumlahkan waktu kerja semua tugas yang diterimanya. Waktu satu tugas adalah panjang tugas dibagi kecepatan VM.",
+      "Yang paling terlambat menentukan nilai. Makespan adalah waktu selesai VM yang paling lama bekerja, dan makespan kecil berarti jadwal bagus. Di program ini ditambahkan suku yang sangat kecil dari sebaran beban, hanya sebagai pemecah seri."
+    ],
+    "model-persamaan": [
+      "Sekarang persamaannya terasa masuk akal karena kita sudah melihat gambarnya. Kita mulai dari jarak antar kunang-kunang, yang dinormalkan ke rentang nol sampai satu supaya nilai gamma bermakna sama di peta dua dimensi maupun di jadwal enam belas tugas.",
+      "Daya tarik Firefly adalah beta nol dikali e pangkat minus gamma r kuadrat. Makin jauh makin lemah. Di Bat, frekuensi diambil acak di antara f minimum dan f maksimum.",
+      "Aturan terbang Firefly menarik yang redup ke yang terang. Pada Bat, kecepatan diperbarui menuju x bintang. Perlu saya sampaikan dengan jujur, tanda kecepatan di sini dibalik dari tulisan Yang supaya kelelawar benar-benar menuju x bintang sesuai penjelasan verbalnya.",
+      "Terakhir, Firefly menambahkan goyang acak alpha sebagai penjaga keragaman. Bat memakai seleksi, yaitu titik baru diterima hanya bila lebih baik dan lolos peluang A, lalu A turun dan r naik."
+    ],
+    "kasus-kode": [
+      "Sekarang kita masukkan ke kasus cloud. Alurnya, tugas masuk, penjadwal membuat banyak kandidat jadwal, tiap kandidat dihitung makespan-nya, lalu Firefly atau Bat menggeser kandidat, dan jadwal terbaik dikirim ke VM. Saya klik sebuah blok tugas untuk memindahkannya ke VM berikutnya dan makespan ikut berubah. Lalu saya tekan Hasil Firefly atau Hasil Bat untuk melihat jadwal yang ditemukan algoritma pada beban kerja yang sama."
+    ],
+    "kasus-run": [
+      "Di sini Firefly dan Bat menjadwalkan beban kerja yang sama persis, dengan populasi awal dan anggaran evaluasi yang sama. Jalur atas Firefly, jalur bawah Bat. Grafik di kanan membandingkan keduanya dengan Round-Robin, Min-Min, dan batas bawah ideal. Saya tekan Mulai, dan kita lihat blok-blok bergeser antar VM sementara makespan turun."
+    ],
+    adu: [
+      "Sekarang adu langsung di peta dua dimensi. Posisi awal kedua algoritma sama persis, jadi perbedaannya hanya datang dari aturan geraknya. Saya bisa ganti fungsi uji ke Rastrigin, Ackley, atau Sphere, dan mengubah seed untuk menunjukkan bahwa pemenangnya bisa berganti. Satu kali jalan belum cukup untuk menarik kesimpulan, makanya slide berikutnya memakai banyak beban kerja."
+    ],
+    eksperimen: [
+      "Di sini algoritma dijalankan pada sepuluh beban kerja berbeda, dan semuanya dihitung langsung di browser. Sumbu tegak adalah rasio terhadap batas bawah ideal, jadi satu kali berarti sempurna. Keduanya jauh lebih baik dari Round-Robin, tapi selisih Firefly dan Bat kecil dan berubah-ubah. Saya tekan Seed baru untuk menunjukkan hasilnya bisa bergeser. Karena itu saya tidak menyimpulkan satu algoritma selalu menang."
+    ],
+    ringkas: [
+      "Untuk meringkas, Firefly dipandu semua yang lebih terang sehingga bisa membentuk beberapa kelompok, sedangkan Bat dipandu satu pemimpin, yaitu x bintang. Firefly membandingkan semua pasangan sehingga lebih mahal saat populasi besar, sementara Bat lebih ringan tapi punya lebih banyak parameter. Jumlah evaluasi fungsi tujuan sama. Baris terakhir adalah angka hidup dari sepuluh beban kerja."
+    ],
+    penutup: [
+      "Ada tiga pesan penutup. Pertama, metaheuristik terbukti berguna karena hasilnya jauh di bawah Round-Robin. Kedua, antara Firefly dan Bat selisihnya kecil dan bergantung pada beban kerja, jadi jangan mengklaim satu pasti unggul. Ketiga, pilihan bergantung konteks, yaitu ukuran populasi, biaya evaluasi, dan waktu untuk menala parameter. Batasannya, tugas independen, VM tetap, tanpa antrean dan biaya komunikasi, dan sepuluh beban kerja belum merupakan uji statistik. Terima kasih."
+    ],
+    pustaka: [
+      "Ini daftar sumber. Paper Firefly dari Yousif dan kawan-kawan tahun 2011 membahas penjadwalan job di grid, sedangkan paper Bat dari Raghavan dan kawan-kawan tahun 2015 membahas workflow di cloud. Perlu saya sampaikan dengan jujur bahwa untuk paper Bat hanya abstraknya yang saya verifikasi, dan angka di aplikasi ini adalah hasil simulator sendiri, bukan angka dari paper. Terima kasih, saya buka sesi diskusi."
+    ]
+  };
+
   // src/slides/index.js
-  var slides = [
+  var base = [
     ...pembukaSlides,
     ...faSlides,
     ...baSlides,
@@ -4746,6 +5045,7 @@
     ...hasilSlides,
     ...penutupSlides
   ];
+  var slides = base.map((slide) => ({ ...slide, script: NASKAH[slide.id] ?? [] }));
 
   // src/main.js
   if (typeof CanvasRenderingContext2D !== "undefined" && !CanvasRenderingContext2D.prototype.roundRect) {

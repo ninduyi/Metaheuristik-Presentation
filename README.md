@@ -41,7 +41,8 @@ Semua jalur memakai alamat relatif, jadi berjalan di subfolder GitHub Pages. Fol
 | `P` | Mulai atau jeda simulasi |
 | `S` | Maju satu langkah simulasi |
 | `R` | Reset simulasi |
-| `N` | Buka atau tutup catatan presenter |
+| `T` | Buka atau tutup kertas naskah narasi |
+| `N` | Buka atau tutup catatan teknis presenter |
 | `G` | Kisi semua slide |
 | `F` | Layar penuh |
 | `?` | Daftar pintasan |
@@ -61,7 +62,16 @@ Semua jalur memakai alamat relatif, jadi berjalan di subfolder GitHub Pages. Fol
 | 9. Hasil eksperimen | `adu`, `eksperimen` | Adu 2D dengan posisi awal sama, 10 beban kerja dengan grafik batang |
 | 10. Kesimpulan | `ringkas`, `penutup`, `pustaka` | Angka kesimpulan dihitung dari data, bukan ditulis tangan |
 
-Catatan presenter tiap slide bisa dibuka dengan `N`. Untuk versi teks seluruh narasi:
+### Kertas naskah untuk presenter
+
+Tombol berikon kertas di kanan atas (atau tombol `T`) membuka lembar kertas krem berisi **naskah yang tinggal dibaca** untuk slide aktif. Paragraf untuk beat yang sedang tampil menyala dan lembar ikut menggulir saat beat atau slide berganti.
+
+- Seret kepala kertas untuk memindahkannya, tarik sudut kanan bawah untuk mengubah ukurannya.
+- `A−` dan `A+` mengubah ukuran huruf (tersimpan di browser).
+- Ikon panah keluar membuka naskah di **jendela terpisah**, cocok untuk layar presenter saat slide diproyeksikan di layar lain. Panah kiri dan kanan di jendela itu ikut memajukan slide. Jendela pop-up harus diizinkan oleh browser.
+- Teks naskah ada di `src/slides/naskah.js`. Ubah sesuai gaya bicara kamu. Jumlah paragraf tiap slide harus sama dengan jumlah beat (ada tesnya).
+
+Catatan teknis tiap slide (rumus, alasan desain) tetap ada di tombol `N`. Untuk versi teks seluruh naskah dan catatan:
 
 ```bash
 npm run narasi     # menulis narasi-presentasi.md
@@ -75,10 +85,11 @@ public/app.bundle.js     bundel untuk file:// (dibuat oleh npm run build)
 public/fonts/            Sora, Manrope, Red Hat Mono (lisensi SIL OFL)
 src/main.js              titik masuk
 src/ui/presenter.js      Presenter: spine, iris, kartu bab, beat, catatan, kisi, pintasan
+src/ui/script.js         ScriptPaper: kertas naskah (geser, ubah ukuran, jendela terpisah)
 src/core/                random.js (PRNG ber-seed), landscapes.js (fungsi 2D), ticker.js (StepTicker)
 src/algorithms/          LOGIKA MURNI tanpa DOM: firefly.js, bat.js, cloudScheduling.js
 src/render/              motion.js (loop kanvas), ambient.js, heatmap.js (peta isoline), sprites, Gantt, grafik
-src/slides/              frame.js (slide bercerita), console.js (konsol simulasi), lab.js (slider), satu berkas per bab
+src/slides/              frame.js (slide bercerita), console.js (konsol simulasi), lab.js (slider), naskah.js (narasi), satu berkas per bab
 src/styles/              tokens, shell, frame, console, panels, fonts
 scripts/                 build (esbuild), serve, run-tests, export-narasi, generate-fonts-css
 tests/                   tes Node (algoritma, cloud, struktur) dan E2E Playwright
@@ -89,7 +100,7 @@ Mengubah kode di `src/` membutuhkan `npm install` sekali (untuk esbuild), lalu `
 ## Pengujian
 
 ```bash
-npm test                          # 29 tes Node, tanpa dependensi
+npm test                          # 30 tes Node, tanpa dependensi
 node tests/e2e/walk.mjs file      # tangkapan layar tiap slide dan beat, melaporkan error konsol
 node tests/e2e/interact.mjs file  # klik tombol sungguhan di tiap simulasi (juga: http)
 ```

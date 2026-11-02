@@ -32,9 +32,20 @@ test('setiap slide punya judul, fungsi mount, dan catatan presenter', () => {
   }
 });
 
+test('setiap slide punya naskah narasi, satu paragraf per beat, tanpa tanda yang dihindari', () => {
+  for (const s of slides) {
+    const beats = s.beats || 1;
+    assert.ok(Array.isArray(s.script) && s.script.length === beats, `${s.id}: naskah ${s.script?.length} paragraf, beat ${beats}`);
+    for (const line of s.script) {
+      assert.ok(line.trim().length > 40, `${s.id}: paragraf terlalu pendek`);
+      assert.ok(!/[—;?]/.test(line), `${s.id}: ada em dash, titik koma, atau tanda tanya`);
+    }
+  }
+});
+
 test('index.html memuat elemen yang dibutuhkan navigasi', () => {
   const html = read('index.html');
-  for (const id of ['frame', 'slides', 'spine', 'presenter-notes', 'overview', 'shortcuts-modal']) {
+  for (const id of ['frame', 'slides', 'spine', 'presenter-notes', 'script-paper', 'btn-script', 'overview', 'shortcuts-modal']) {
     assert.ok(html.includes(`id="${id}"`), `elemen ${id} hilang`);
   }
   assert.ok(html.includes('app.bundle.js'), 'jalur file:// ke app.bundle.js hilang');

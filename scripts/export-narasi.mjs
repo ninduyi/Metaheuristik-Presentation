@@ -21,7 +21,8 @@ const toText = (html) =>
 
 let out = '# Narasi presentasi: Firefly vs Bat untuk Cloud Task Scheduling\n\nDihasilkan otomatis dari catatan presenter di tiap slide.\n';
 slides.forEach((s, i) => {
-  out += `\n## ${i + 1}. ${s.title}\n\n${toText(s.notes || '')}\n`;
+  const script = (s.script || []).map((t, k) => (s.script.length > 1 ? `**Beat ${k + 1}.** ${t}` : t)).join('\n\n');
+  out += `\n## ${i + 1}. ${s.title}\n\n### Naskah yang diucapkan\n\n${script}\n\n### Catatan teknis\n\n${toText(s.notes || '')}\n`;
 });
 fs.writeFileSync(path.join(root, 'narasi-presentasi.md'), out);
 console.log(`narasi-presentasi.md ditulis (${slides.length} slide)`);

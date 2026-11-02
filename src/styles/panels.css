@@ -279,3 +279,104 @@
 .book-cite { margin: 0 0 12px; color: var(--dim); font-size: 21px; line-height: 1.4; }
 .book-use { margin: 0; color: #dfe9ff; font-size: 21px; line-height: 1.4; }
 .book-use strong { color: var(--accent); }
+
+/* ---------- Kertas naskah (presenter) ---------- */
+
+.paper {
+  --paper-size: 32px;
+  position: absolute;
+  left: 980px;
+  top: 300px;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  width: 860px;
+  height: 640px;
+  min-width: 460px;
+  min-height: 280px;
+  overflow: hidden;
+  resize: both;
+  border-radius: 14px;
+  background: #fbf5e4;
+  color: #1c2133;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(60, 40, 10, 0.25);
+}
+.paper.hidden { display: none !important; }
+.paper.dragging { box-shadow: 0 40px 90px rgba(0, 0, 0, 0.65), 0 0 0 2px var(--amber); }
+.paper-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: none;
+  padding: 10px 14px 10px 20px;
+  background: #e9dcb8;
+  border-bottom: 2px solid #cdbd90;
+  color: #4a3a14;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.paper-head b { font-family: var(--font-display); font-size: 24px; }
+.paper-where { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; font-weight: 700; opacity: 0.75; }
+.paper-tools { display: flex; gap: 6px; }
+.paper-tools button {
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid #b9a875;
+  border-radius: 10px;
+  background: #f6edcf;
+  color: #4a3a14;
+  font-size: 19px;
+  font-weight: 800;
+}
+.paper-tools button:hover { background: #fff8de; border-color: #8f7a3a; }
+.paper-tools svg { width: 22px; height: 22px; }
+.paper-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 28px 40px 22px;
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--paper-size) * 1.75 - 2px), rgba(120, 100, 50, 0.13) calc(var(--paper-size) * 1.75 - 2px), rgba(120, 100, 50, 0.13) calc(var(--paper-size) * 1.75));
+  background-origin: content-box;
+  scrollbar-width: thin;
+}
+.paper-line {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  margin: 0 0 calc(var(--paper-size) * 0.7);
+  padding: 8px 12px 8px 10px;
+  border-left: 5px solid transparent;
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: var(--paper-size);
+  font-weight: 600;
+  line-height: 1.55;
+  opacity: 0.42;
+  transition: opacity 260ms ease, background 260ms ease;
+}
+.paper-line i {
+  flex: none;
+  align-self: flex-start;
+  margin-top: calc(var(--paper-size) * 0.32);
+  display: grid;
+  place-items: center;
+  width: calc(var(--paper-size) * 0.9);
+  height: calc(var(--paper-size) * 0.9);
+  border: 2px solid #8f7a3a;
+  border-radius: 50%;
+  color: #6b5720;
+  font-family: var(--font-mono);
+  font-size: calc(var(--paper-size) * 0.5);
+  font-style: normal;
+}
+.paper-line.done { opacity: 0.55; }
+.paper-line.on { opacity: 1; border-left-color: #d9822b; background: rgba(255, 214, 120, 0.3); }
+.paper-line.on i { background: #d9822b; border-color: #d9822b; color: #fff; }
+
+/* Jendela terpisah */
+.paper-window { display: block; overflow: auto; background: #2a2f45; }
+.paper-solo { position: static; width: 100%; height: 100vh; min-width: 0; resize: none; border-radius: 0; box-shadow: none; }
+.paper-solo .paper-head { cursor: default; }

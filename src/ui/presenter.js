@@ -6,6 +6,8 @@
  * - Transisi iris: slide baru terbuka sebagai lingkaran dari titik klik, bab baru diawali kartu bab.
  */
 
+import { ScriptPaper } from './script.js';
+
 const STAGE_W = 1920;
 const STAGE_H = 1080;
 const LEAVE_MS = 700;
@@ -30,6 +32,11 @@ export class Presenter {
     this.notes = $('presenter-notes');
     this.overview = $('overview');
     this.help = $('shortcuts-modal');
+    this.paper = new ScriptPaper({
+      getState: () => ({ slide: this.slides[this.index], index: this.index, total: this.slides.length, beat: this.beat }),
+      scale: () => this.scale,
+      goBeat: (d) => (d > 0 ? this.next() : this.prev())
+    });
   }
 
   start() {
@@ -119,6 +126,7 @@ export class Presenter {
   #bind() {
     $('btn-prev').addEventListener('click', (e) => this.prev(e));
     $('btn-next').addEventListener('click', (e) => this.next(e));
+    $('btn-script').addEventListener('click', () => this.paper.toggle());
     $('btn-notes').addEventListener('click', () => this.toggleNotes());
     $('btn-close-notes').addEventListener('click', () => this.toggleNotes(false));
     $('btn-overview').addEventListener('click', () => this.#toggle(this.overview));
@@ -159,6 +167,7 @@ export class Presenter {
       this.#toggle(this.help, false);
       this.#toggle(this.overview, false);
       this.toggleNotes(false);
+      this.paper.setOpen(false);
       if (this.#typing(e.target)) e.target.blur();
       return;
     }
@@ -177,6 +186,7 @@ export class Presenter {
     else if (key === 'End') run(() => this.goTo(this.slides.length - 1));
     else if (/^[1-9]$/.test(key) && this.chapters[Number(key) - 1]) run(() => this.goTo(this.chapters[Number(key) - 1].indices[0]));
     else if (key === 'f') run(() => this.toggleFullscreen());
+    else if (key === 't') run(() => this.paper.toggle());
     else if (key === 'n') run(() => this.toggleNotes());
     else if (key === 'g' || key === 'o') run(() => this.#toggle(this.overview));
     else if (key === '?' || key === 'h') run(() => this.#toggle(this.help));
@@ -302,6 +312,7 @@ export class Presenter {
     });
     const chapter = this.slides[this.index].chapter.id;
     this.spineChapters.forEach((c) => c.classList.toggle('current', c.dataset.chapter === chapter));
+    this.paper?.update();
     this.counterEl.textContent = `${String(this.index + 1).padStart(2, '0')} / ${this.slides.length}`;
   }
 }

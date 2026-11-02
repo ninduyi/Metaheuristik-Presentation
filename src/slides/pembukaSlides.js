@@ -23,9 +23,6 @@ import { mountStory } from './frame.js';
 import { hash01 } from '../render/ambient.js';
 import { CH } from './chapters.js';
 
-const TEAM_STORAGE_KEY = 'fa_ba_deck_team_line_v1';
-const DEFAULT_TEAM = 'Klik untuk isi nama kelompok & NRP';
-
 const TASKS = generateTasks(16, 2026);
 const VMS = DEFAULT_VMS;
 const RR = roundRobin(TASKS, VMS);
@@ -76,33 +73,14 @@ const judulSlide = {
   title: 'Judul',
   notes: `
     <p>Sapa audiens. Mulai dari pertanyaan sehari-hari: kalau ada banyak pekerjaan dan beberapa komputer yang kecepatannya beda, pekerjaan mana ditaruh di komputer mana?</p>
-    <p>Hari ini kita bandingkan dua jawaban dari alam: kunang-kunang (Firefly Algorithm) dan kelelawar (Bat Algorithm). Keduanya diuji pada beban kerja dan fungsi tujuan yang sama.</p>
-    <p>Klik baris nama di bawah judul untuk mengisi nama kelompok. Isinya tersimpan otomatis di browser ini.</p>`,
+    <p>Hari ini kita bandingkan dua jawaban dari alam: kunang-kunang (Firefly Algorithm) dan kelelawar (Bat Algorithm). Keduanya diuji pada beban kerja dan fungsi tujuan yang sama.</p>`,
   mount(container, ctx) {
-    let team = DEFAULT_TEAM;
-    try {
-      const stored = localStorage.getItem(TEAM_STORAGE_KEY);
-      if (stored && stored.trim()) team = stored.trim();
-    } catch (_e) {
-      // Penyimpanan bisa dibatasi peramban; nama bawaan tetap dipakai
-    }
-
     const cleanup = mountStory(container, ctx, {
       tag: 'Strategi Optimasi Komputasi Awan',
       beats: [{ title: 'Firefly vs Bat', html: '<span class="c-fa">Firefly</span> <span class="c-vs">vs</span> <span class="c-ba">Bat</span>', sub: 'Dua algoritma terinspirasi alam untuk menjadwalkan tugas di cloud.' }],
-      draw: drawTitleScene,
-      extraHtml: `<div class="team" id="team-line" contenteditable="true" spellcheck="false" role="textbox" aria-label="Nama kelompok dan NRP"></div>`
+      draw: drawTitleScene
     });
 
-    const teamEl = container.querySelector('#team-line');
-    teamEl.textContent = team;
-    teamEl.addEventListener('input', () => {
-      try {
-        localStorage.setItem(TEAM_STORAGE_KEY, teamEl.textContent || '');
-      } catch (_e) {
-        // Perubahan hanya berlaku sampai halaman ditutup
-      }
-    });
     container.classList.add('hero');
     return cleanup;
   }
@@ -116,7 +94,7 @@ const SCHED_RECT = { x: 110, y: 470, w: 1700, h: 470 };
 function drawProblemScene(ctx, { t, bt, beat }) {
   drawBackdrop(ctx, t, 'blue');
   const tMax = RR.makespan * 1.12;
-  const dim = beat === 2 ? 0.22 : 1;
+  const dim = 1;
 
   ctx.save();
   ctx.globalAlpha = dim;
@@ -151,14 +129,14 @@ function drawProblemScene(ctx, { t, bt, beat }) {
         weight: 700
       });
     });
-  } else {
+  } else if (beat === 1) {
     drawSchedule(ctx, SCHED_RECT, TASKS, VMS, RR_LAYOUT, {
       tMax,
       laneColor: COLORS.blue,
       queue: { x: 140, y: QUEUE_Y },
-      appear: beat === 1 ? (idx) => clamp01((bt - 0.3 - 0.26 * idx) / 0.85) : () => 1,
-      makespan: beat === 1 && bt > 5.6 ? RR.makespan : beat === 2 ? RR.makespan : null,
-      ideal: beat >= 1 && bt > 6.4 ? IDEAL : beat === 2 ? IDEAL : null
+      appear: (idx) => clamp01((bt - 0.3 - 0.26 * idx) / 0.85),
+      makespan: bt > 5.6 ? RR.makespan : null,
+      ideal: bt > 6.4 ? IDEAL : null
     });
   }
   ctx.restore();
@@ -185,28 +163,99 @@ function drawProblemScene(ctx, { t, bt, beat }) {
     }
   }
 
-  if (beat === 2) {
-    const grow = seg(bt, 0.1, 1.8, easeOut);
-    const n = Math.round(TOTAL_COMBOS * grow);
-    drawText(ctx, `4¹⁶ = ${fmtInt(n)}`, 960, 590, { size: 150, align: 'center', color: COLORS.gold, mono: true, weight: 800 });
-    drawText(ctx, 'kemungkinan jadwal untuk hanya 16 tugas dan 4 VM', 960, 700, {
-      size: 44,
-      align: 'center',
-      alpha: seg(bt, 1.2, 0.7, easeOut),
-      color: COLORS.ink
-    });
-    const gap = ((RR.makespan / IDEAL - 1) * 100).toFixed(0);
-    drawPill(ctx, `Round-Robin ${gap}% di atas batas bawah`, 960, 830, {
-      fill: COLORS.coral,
-      size: 34,
-      alpha: seg(bt, 2.4, 0.6, easeOut)
-    });
-    drawText(ctx, 'Setiap tugas tambahan melipatgandakan pilihan: 32 tugas saja sudah 4³² ≈ 1,8 × 10¹⁹ jadwal.', 960, 925, {
-      size: 30,
-      align: 'center',
-      color: COLORS.muted,
-      alpha: seg(bt, 3.4, 0.7, easeOut)
-    });
+  if (beat === 2) drawBranchingTree(ctx, bt);
+}
+
+/* Pohon percabangan: tiap tugas membuka empat pilihan VM, jadi jumlah jadwal tumbuh empat kali lipat per tugas. */
+
+const TREE = { x0: 190, dx: 235, top: 360, bottom: 960, levels: 4 };
+const TREE_COLORS = [COLORS.cyan, COLORS.purple, COLORS.pink, COLORS.gold];
+const MS_PER_CHECK = 1; // anggapan: satu jadwal dicek dalam 1 milidetik
+const DAYS_ALL = (TOTAL_COMBOS * MS_PER_CHECK) / 86_400_000;
+
+function treeNode(level, i) {
+  const n = 4 ** level;
+  return { x: TREE.x0 + level * TREE.dx, y: level === 0 ? (TREE.top + TREE.bottom) / 2 : TREE.top + ((i + 0.5) * (TREE.bottom - TREE.top)) / n };
+}
+
+function drawBranchingTree(ctx, bt) {
+  for (let level = 1; level <= TREE.levels; level++) {
+    const p = seg(bt, 0.2 + (level - 1) * 0.85, 0.85, easeOut);
+    if (p <= 0) continue;
+    const n = 4 ** level;
+    const small = level >= 4;
+    for (let i = 0; i < n; i++) {
+      const from = treeNode(level - 1, Math.floor(i / 4));
+      const to = treeNode(level, i);
+      const ex = from.x + (to.x - from.x) * p;
+      const ey = from.y + (to.y - from.y) * p;
+      ctx.strokeStyle = hexToRgba(TREE_COLORS[i % 4], small ? 0.34 : 0.62);
+      ctx.lineWidth = small ? 1 : level === 3 ? 1.6 : 2.6;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+      if (!small && p > 0.9) {
+        ctx.fillStyle = TREE_COLORS[i % 4];
+        ctx.beginPath();
+        ctx.arc(to.x, to.y, level === 1 ? 9 : level === 2 ? 6 : 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    drawText(ctx, `tugas ${level}`, TREE.x0 + level * TREE.dx, TREE.top - 34, { size: 24, color: COLORS.muted, align: 'center', weight: 700, alpha: p });
+    drawText(ctx, fmtInt(n), TREE.x0 + level * TREE.dx, TREE.bottom + 44, { size: 32, color: COLORS.gold, align: 'center', mono: true, weight: 700, alpha: p });
+  }
+  const root = treeNode(0, 0);
+  drawGlow(ctx, root.x, root.y, 46, 'rgba(251,191,36,0.5)');
+  ctx.fillStyle = COLORS.gold;
+  ctx.beginPath();
+  ctx.arc(root.x, root.y, 14, 0, Math.PI * 2);
+  ctx.fill();
+  drawText(ctx, 'mulai', root.x, TREE.top - 34, { size: 24, color: COLORS.muted, align: 'center', weight: 700 });
+  drawText(ctx, 'jadwal', root.x, TREE.bottom + 44, { size: 24, color: COLORS.muted, align: 'center', weight: 700 });
+
+  // Lanjutan ke tugas 16
+  const dotsA = seg(bt, 4.0, 0.7, easeOut);
+  if (dotsA > 0) {
+    const lastX = TREE.x0 + TREE.levels * TREE.dx;
+    for (let k = 0; k < 3; k++) {
+      ctx.fillStyle = hexToRgba(COLORS.ink, 0.35 + 0.65 * Math.abs(Math.sin(bt * 2 + k)));
+      ctx.beginPath();
+      ctx.arc(lastX + 70 + k * 26, 660, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    drawText(ctx, 'sampai tugas 16', lastX + 108, 710, { size: 25, color: COLORS.muted, align: 'center', weight: 700, alpha: dotsA });
+  }
+
+  // Stopwatch: berapa lama kalau semua jadwal dicek satu per satu
+  const cx = 1560;
+  const cy = 600;
+  const r = 150;
+  const clockA = seg(bt, 4.4, 0.6, easeOut);
+  if (clockA > 0) {
+    ctx.save();
+    ctx.globalAlpha *= clockA;
+    ctx.lineWidth = 22;
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    const sweep = seg(bt, 4.8, 3.2, easeInOut);
+    ctx.strokeStyle = COLORS.coral;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * sweep * 0.92);
+    ctx.stroke();
+    ctx.restore();
+    const days = Math.round(DAYS_ALL * sweep);
+    drawText(ctx, `±${days}`, cx, cy - 12, { size: 84, color: COLORS.coral, align: 'center', mono: true, weight: 800, alpha: clockA });
+    drawText(ctx, 'hari nonstop', cx, cy + 52, { size: 30, color: COLORS.ink, align: 'center', weight: 700, alpha: clockA });
+    drawText(ctx, 'kalau tiap jadwal dicek 1 milidetik', cx, cy + r + 62, { size: 25, color: COLORS.muted, align: 'center', weight: 600, alpha: clockA });
+    drawText(ctx, `(tugas 16 ≈ ${(TOTAL_COMBOS / 1e9).toFixed(1).replace('.', ',')} miliar jadwal)`, cx, cy + r + 98, { size: 22, color: COLORS.muted, align: 'center', weight: 600, alpha: clockA });
+  }
+  const pillA = seg(bt, 8.2, 0.7, easeOut);
+  if (pillA > 0) {
+    drawPill(ctx, 'FA dan BA di deck ini: sekitar 1.100 evaluasi', cx, 900, { fill: COLORS.lime, size: 28, alpha: pillA });
   }
 }
 
@@ -218,7 +267,7 @@ const masalahSlide = {
   notes: `
     <p><b>Beat 1.</b> Ada 16 tugas dengan panjang berbeda (satuan MI, juta instruksi) dan 4 VM dengan kecepatan berbeda (85 sampai 175 MIPS). Waktu eksekusi satu tugas = MI dibagi MIPS.</p>
     <p><b>Beat 2.</b> Cara paling sederhana adalah Round-Robin: tugas dibagi bergiliran. Adil dari sisi jumlah, tapi tidak adil dari sisi waktu. VM paling lambat menerima jatah sama banyak, sehingga selesai paling akhir. Waktu selesai VM terakhir itulah <b>makespan</b>. Garis hijau adalah batas bawah ideal bila seluruh instruksi terbagi sempurna sesuai kecepatan VM.</p>
-    <p><b>Beat 3.</b> Mencoba semua jadwal tidak mungkin: 4 pangkat 16 sudah di atas empat miliar, dan angkanya meledak tiap tugas bertambah. Jadi kita butuh cara mencari yang cerdas. Itu pintu masuk ke metaheuristik.</p>`,
+    <p><b>Beat 3.</b> Pohon percabangan: tiap tugas membuka empat pilihan VM, jadi jumlah jadwal naik empat kali lipat per tugas (4, 16, 64, 256, dan seterusnya sampai tugas ke-16, sekitar 4,3 miliar). Bila satu jadwal dicek dalam satu milidetik, mengecek semuanya butuh hampir 50 hari nonstop. Pengaturan bawaan FA dan BA di deck ini hanya memakai sekitar 1.100 evaluasi (28 individu × 40 iterasi, ditambah evaluasi awal). Jadi kita butuh cara mencari yang cerdas. Itu pintu masuk ke metaheuristik.</p>`,
   mount(container, ctx) {
     return mountStory(container, ctx, {
       tag: '1 · Latar belakang',
