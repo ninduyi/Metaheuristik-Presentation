@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Firefly vs Bat | Penjadwalan Tugas di Cloud</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23040a1f'/%3E%3Ccircle cx='24' cy='34' r='14' fill='%2322d3ee' opacity='.3'/%3E%3Ccircle cx='24' cy='34' r='6' fill='%23a5f3fc'/%3E%3Cpath d='M34 28l7-7 4 7 4-7 7 7-4 13-7 4-7-4z' fill='%238b5cf6'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./src/styles/main.css" />
+</head>
+<body data-chapter="masalah">
+  <!-- Satu panggung 1920x1080 yang diskalakan; semua elemen di bawah ikut terskala bersamanya -->
+  <div id="frame" class="frame">
+    <main id="slides" class="slides"></main>
+
+    <div id="chapter-card" class="chapter-card" aria-hidden="true"></div>
+
+    <nav id="spine" class="spine" aria-label="Bab dan slide"></nav>
+
+    <div class="toolbar" role="toolbar" aria-label="Alat presentasi">
+      <button type="button" id="btn-overview" title="Semua slide (G)" aria-label="Semua slide">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </button>
+      <button type="button" id="btn-notes" aria-pressed="false" title="Catatan presenter (N)" aria-label="Catatan presenter">
+        <svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg>
+      </button>
+      <button type="button" id="btn-help" title="Pintasan keyboard (?)" aria-label="Pintasan keyboard">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2.9-1.2 1.7M12 17h.01"/></svg>
+      </button>
+      <button type="button" id="btn-fullscreen" title="Layar penuh (F)" aria-label="Layar penuh">
+        <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+    </div>
+
+    <button type="button" class="edge edge-prev" id="btn-prev" aria-label="Sebelumnya" title="Sebelumnya (←)">
+      <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <button type="button" class="edge edge-next" id="btn-next" aria-label="Berikutnya" title="Berikutnya (→)">
+      <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+    <span id="counter" class="counter"></span>
+
+    <!-- Lembar catatan presenter: naik dari bawah -->
+    <aside id="presenter-notes" class="sheet hidden" aria-label="Catatan presenter">
+      <header>
+        <h2 id="notes-title"></h2>
+        <button type="button" id="btn-close-notes" aria-label="Tutup catatan">&times;</button>
+      </header>
+      <div id="notes-content" class="sheet-body"></div>
+    </aside>
+
+    <section id="overview" class="overview hidden" aria-label="Semua slide">
+      <div class="overview-grid"></div>
+    </section>
+
+    <div id="shortcuts-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Pintasan keyboard">
+      <div class="modal-card">
+        <header>
+          <h2>Pintasan keyboard</h2>
+          <button type="button" id="btn-close-help" aria-label="Tutup pintasan">&times;</button>
+        </header>
+        <dl class="keys">
+          <dt><kbd>→</kbd><kbd>Spasi</kbd></dt><dd>Beat atau slide berikutnya</dd>
+          <dt><kbd>←</kbd></dt><dd>Sebelumnya</dd>
+          <dt><kbd>1</kbd>–<kbd>8</kbd></dt><dd>Lompat ke bab</dd>
+          <dt><kbd>G</kbd></dt><dd>Kisi semua slide</dd>
+          <dt><kbd>P</kbd></dt><dd>Mulai atau jeda simulasi</dd>
+          <dt><kbd>S</kbd></dt><dd>Satu langkah simulasi</dd>
+          <dt><kbd>R</kbd></dt><dd>Reset simulasi</dd>
+          <dt><kbd>N</kbd></dt><dd>Catatan presenter</dd>
+          <dt><kbd>F</kbd></dt><dd>Layar penuh</dd>
+          <dt><kbd>Esc</kbd></dt><dd>Tutup panel</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pemuat: lewat file:// memakai bundel biasa (module tidak boleh dimuat dari file), lewat http(s) memakai ES module -->
+  <script>
+    (function () {
+      var s = document.createElement('script');
+      if (location.protocol === 'file:') {
+        s.src = './public/app.bundle.js';
+      } else {
+        s.type = 'module';
+        s.src = './src/main.js';
+      }
+      document.body.appendChild(s);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "fa-vs-ba-presentasi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Presentasi interaktif Firefly Algorithm vs Bat Algorithm untuk penjadwalan tugas di cloud (mata kuliah Strategi Optimasi Komputasi Awan)",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/run-tests.mjs",
+    "narasi": "node scripts/export-narasi.mjs"
+  },
+  "engines": { "node": ">=18" },
+  "devDependencies": { "esbuild": "^0.28.2" }
+}

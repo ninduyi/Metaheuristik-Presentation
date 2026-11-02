@@ -1,0 +1,72 @@
+@import './fonts.css';
+
+/*
+ * Token desain "Observatorium": navy sangat gelap sebagai langit, biru dan cyan sebagai cahaya Firefly,
+ * ungu sebagai gema Bat. Emas menandai yang terbaik, lime yang diterima, koral yang ditolak.
+ * Semua ukuran dalam px karena panggung selalu 1920x1080 lalu diskalakan ke jendela.
+ */
+
+:root {
+  --bg-0: #040a1f;
+  --bg-1: #09133a;
+  --bg-2: #101f55;
+  --ink: #eef4ff;
+  --dim: #9fb0d3;
+  --edge: rgba(176, 202, 255, 0.17);
+  --glass: rgba(9, 19, 54, 0.62);
+  --glass-strong: rgba(6, 13, 40, 0.9);
+
+  --cyan: #22d3ee;
+  --cyan-soft: #a5f3fc;
+  --blue: #4f8cff;
+  --blue-soft: #9dc0ff;
+  --violet: #8b5cf6;
+  --violet-soft: #c4b5fd;
+  --pink: #f472b6;
+  --amber: #fbbf24;
+  --lime: #a3e635;
+  --coral: #fb7185;
+  --teal: #5eead4;
+
+  --accent: var(--amber);
+  --font-display: 'Sora', 'Manrope', sans-serif;
+  --font-body: 'Manrope', 'Sora', sans-serif;
+  --font-mono: 'Red Hat Mono', 'Manrope', monospace;
+}
+
+body[data-chapter='masalah'] { --accent: var(--amber); }
+body[data-chapter='metaheuristik'] { --accent: var(--blue-soft); }
+body[data-chapter='firefly'] { --accent: var(--cyan-soft); }
+body[data-chapter='bat'] { --accent: var(--violet-soft); }
+body[data-chapter='model'] { --accent: var(--pink); }
+body[data-chapter='cloud'] { --accent: var(--teal); }
+body[data-chapter='hasil'] { --accent: var(--amber); }
+body[data-chapter='penutup'] { --accent: var(--cyan-soft); }
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #02061a;
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.hidden { display: none !important; }
+kbd {
+  display: inline-block;
+  min-width: 30px;
+  padding: 3px 9px;
+  border: 1px solid var(--edge);
+  border-bottom-width: 3px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  text-align: center;
+}
