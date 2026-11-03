@@ -3107,21 +3107,21 @@
   var faKarakter = {
     id: "fa-karakter",
     chapter: CH.firefly,
-    title: "Firefly: tiga tombol pengatur",
+    title: "Firefly: parameter algoritma",
     notes: `
-    <p>Slide ini boleh dimainkan langsung. Geser slider dan lihat kurva berubah.</p>
+    <p><b>Mengapa slide ini perlu dijelaskan:</b> Seluruh dinamika pencarian Firefly Algorithm bertumpu pada formula daya tarik optik: &beta;(r) = &beta;<sub>0</sub> e<sup>-&gamma; r<sup>2</sup></sup>. Tanpa memahami tiga parameter ini, kita tidak bisa memahami bagaimana algoritma menyeimbangkan eksplorasi (mencari wilayah baru) dan eksploitasi (memperdalam solusi yang sudah ditemukan), serta mengapa Firefly mampu membagi diri menjadi beberapa kelompok (sub-swarms) secara alami.</p>
     <ul>
-      <li><b>\u03B2\u2080</b>: daya tarik saat dua kunang-kunang berdekatan. Besar berarti langsung menempel.</li>
-      <li><b>\u03B3</b>: peredam jarak. \u03B3 kecil, tarikan terasa dari jauh (satu kelompok besar). \u03B3 besar, tarikan hanya terasa dari dekat (banyak kelompok kecil, lebih menjelajah).</li>
-      <li><b>\u03B1</b>: lebar langkah acak. Besar berarti banyak jelajah, kecil berarti hasil rapi. Nilainya menyusut tiap iterasi dalam simulasi.</li>
+      <li><b>\u03B2\u2080 (Daya Tarik Dasar):</b> Kekuatan tarikan saat jarak antarkunang-kunang bernilai nol (r = 0). Nilai ini menentukan seberapa agresif kunang-kunang mendekati tetangganya yang lebih terang ketika posisinya berdekatan.</li>
+      <li><b>\u03B3 (Koefisien Penyerapan Media / Peredam Jarak):</b> Mengontrol seberapa cepat cahaya dan daya tarik meredup seiring pertambahan jarak. Jika \u03B3 kecil (&rarr; 0), cahaya menembus jauh sehingga semua kunang-kunang saling tertarik ke satu arah (mirip PSO). Jika \u03B3 besar, daya tarik hanya bekerja pada jarak sangat dekat, memungkinkan terbentuknya banyak kluster lokal untuk memetakan ruang pencarian multimodal tanpa terjebak pada satu puncak semu.</li>
+      <li><b>\u03B1 (Parameter Keacakan / Langkah Acak):</b> Memberikan perturbasi stokastik setelah individu tertarik terbang. Ini mencegah konvergensi dini dan menjaga diversitas populasi. Pada implementasi simulasi, nilai \u03B1 perlahan diturunkan (annealing) agar pencarian di akhir iterasi lebih halus dan fokus.</li>
     </ul>
-    <p>Jarak r di sini dinormalkan ke 0 sampai 1 (lebar ruang pencarian), jadi \u03B3 berarti sama di peta 2D maupun jadwal 16 tugas.</p>`,
+    <p><b>Konteks ke Penjadwalan Cloud:</b> Jarak r di slide ini dinormalkan ke rentang [0, 1] terhadap skala ruang pencarian. Konsep yang sama nantinya langsung dipetakan ke koordinat vektor tugas penjadwalan cloud 16 tugas dan 4 VM.</p>`,
     mount(container, ctx) {
       return mountLab(container, ctx, {
         tag: "3 \xB7 Firefly Algorithm",
-        title: "Tiga tombol pengatur",
+        title: "Parameter Algoritma Firefly",
         color: FA_COLOR,
-        intro: "Coba geser. Kurva dan peragaan gerak langsung ikut berubah.",
+        intro: "",
         sliders: [
           { key: "beta0", label: "\u03B2\u2080 daya tarik dasar", min: 0.2, max: 1.5, step: 0.05, value: 1, desc: "Seberapa kuat tarikan saat jarak nol." },
           { key: "gamma", label: "\u03B3 peredam jarak", min: 0, max: 10, step: 0.1, value: 2, desc: "Makin besar, makin cepat tarikan lenyap oleh jarak." },
@@ -3777,7 +3777,7 @@
     </ol>
     <p>Dalam simulasi, urutan tiga tahap ini sama persis: Pulsa, Jelajah lokal, Terima.</p>`,
     mount(container, ctx) {
-      return mountStory(container, ctx, {
+      const cleanup = mountStory(container, ctx, {
         tag: "6 \xB7 Cara kerja Bat",
         trail: ["Pulsa menuju x*", "Jelajah lokal", "Terima atau tolak"],
         beats: [
@@ -3785,8 +3785,23 @@
           { title: "Kadang menjelajah di dekat x*", sub: "Bila rand > r, titik percobaan diganti titik acak sekitar x*." },
           { title: "Hanya yang lolos yang berpindah", sub: "Harus lebih baik dan lolos peluang kenyaringan A." }
         ],
-        draw: makeBatHowDraw()
+        draw: makeBatHowDraw(),
+        extraHtml: `
+        <a id="btn-bat-3d" class="btn-bat-3d" target="_blank" rel="noopener noreferrer" title="Dunia Baty 3D - Bat Algorithm Echolocation Swarm">
+          <span class="badge-3d">3D</span>
+          <span class="label-3d">Dunia Baty</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </a>`
       });
+      const link = container.querySelector("#btn-bat-3d");
+      if (link) {
+        link.href = "https://ninduyi.github.io/tes/";
+      }
+      return cleanup;
     }
   };
   var baRenderer = new BARenderer();
@@ -4955,12 +4970,12 @@
   // src/slides/naskah.js
   var NASKAH = {
     judul: [
-      "Halo semuanya. Hari ini saya akan membahas dua algoritma yang terinspirasi dari alam, yaitu Firefly Algorithm dan Bat Algorithm, dan bagaimana keduanya dipakai untuk menjadwalkan tugas di cloud. Sebelum masuk ke rumus, kita lihat dulu gambarnya. Tiap konsep akan saya tunjukkan lewat animasi dan simulasi yang bisa dijalankan langsung di slide ini."
+      "Selamat pagi rekan-rekan dan Bapak Ibu dosen. Pada presentasi kali ini, kami akan membedah strategi optimasi komputasi awan melalui komparasi dua metaheuristik berbasis alam, yaitu Firefly Algorithm dan Bat Algorithm, untuk memecahkan persoalan penjadwalan tugas komputasi awan. Melalui visualisasi interaktif dan simulasi komparatif langsung, kita akan menelaah bagaimana kedua algoritma ini bekerja, bagaimana perilakunya menyeimbangkan eksplorasi dan eksploitasi, serta efektivitasnya dalam meminimalkan waktu penyelesaian atau makespan."
     ],
     masalah: [
-      "Bayangkan ada enam belas tugas dengan panjang yang berbeda-beda, lalu ada empat mesin virtual yang kecepatannya juga tidak sama, dari 85 sampai 175 MIPS. Pertanyaan intinya sederhana. Tugas mana sebaiknya ditaruh di mesin mana. Waktu kerja satu tugas dihitung dari panjang tugas dibagi kecepatan mesin.",
-      "Cara paling gampang adalah Round-Robin, yaitu tugas dibagi bergiliran. Kelihatannya adil karena jumlahnya sama, tapi mesin yang paling lambat ikut kebagian jatah yang sama sehingga selesai paling akhir. Waktu selesai mesin terakhir inilah yang kita sebut makespan. Di sini Round-Robin berada sekitar 51 persen di atas batas bawah ideal, yaitu garis hijau.",
-      "Mungkin ada yang berpikir, coba saja semua kemungkinan. Masalahnya, tiap tugas punya empat pilihan mesin, jadi setiap tugas tambahan melipatkan jumlah jadwal empat kali. Pohon ini baru sampai tugas keempat dan sudah ada dua ratus lima puluh enam cabang. Untuk enam belas tugas, jumlahnya sekitar 4,3 miliar jadwal. Kalau satu jadwal dicek dalam satu milidetik, kita butuh hampir lima puluh hari nonstop. Karena itu kita perlu pencari yang cerdas, bukan pencoba semua."
+      "Latar belakang masalah berakar dari alokasi sumber daya di pusat data komputasi awan. Kita menghadapi enam belas tugas dengan beban instruksi berbeda, yang harus dialokasikan ke empat mesin virtual heterogen dengan kapasitas 85 hingga 175 MIPS. Waktu pemrosesan setiap tugas berbanding lurus dengan panjang instruksi dibagi kecepatan mesin virtual tujuan, sehingga keputusan penempatan tugas menjadi penentu utama efisiensi komputasi.",
+      "Pendekatan konvensional seperti Round-Robin membagi tugas secara merata bergiliran. Meski terkesan adil dari kuantitas tugas, strategi ini mengabaikan heterogenitas kecepatan mesin, sehingga mesin terlambat menyelesaikan beban paling lama. Waktu selesai mesin paling lambat inilah yang kita definisikan sebagai makespan. Pada simulasi ini, makespan Round-Robin terpaut jauh sekitar 51 persen di atas batas bawah ideal, yang ditunjukkan oleh garis hijau.",
+      "Mencari jadwal optimal dengan memeriksa seluruh kemungkinan kombinasi secara brute force terbukti mustahil karena terjadi ledakan kombinatorial. Setiap penambahan tugas melipatgandakan ruang solusi empat kali lipat, sehingga enam belas tugas menghasilkan lebih dari 4,29 miliar kombinasi jadwal. Jika satu jadwal dievaluasi dalam satu milidetik, penelusuran menyeluruh memakan waktu hampir lima puluh hari nonstop. Inilah alasan mengapa kita memerlukan algoritma metaheuristik cerdas yang mampu menemukan solusi mendekati optimal secara efisien."
     ],
     lanskap: [
       "Sekarang bayangkan setiap jadwal sebagai satu titik di pegunungan, dan tingginya adalah waktu selesai. Pencari tunggal yang hanya mau turun akan berhenti di lembah terdekat. Itu yang disebut optimum lokal, sementara lembah yang lebih dalam tidak pernah ia lihat.",
@@ -4973,7 +4988,7 @@
       "Aturan mainnya, yang redup terbang mengejar yang lebih terang. Semakin jauh jaraknya, semakin lemah tarikannya, sama seperti cahaya yang memudar di kejauhan."
     ],
     "fa-karakter": [
-      "Ada tiga tombol pengatur di Firefly. Beta nol menentukan kuat tarikan saat jaraknya nol. Gamma menentukan seberapa cepat tarikan hilang karena jarak. Alpha mengatur lebar langkah acak setelah terbang. Saya geser slider-nya sekarang, dan kurva serta peragaan geraknya langsung ikut berubah. Kursor bisa digerakkan di grafik untuk memilih jarak tertentu."
+      "Slide ini menjelaskan tiga parameter utama yang mengendalikan seluruh perilaku Firefly Algorithm, yaitu beta nol, gamma, dan alpha. Pemahaman ketiga parameter ini sangat penting karena keseimbangan antara penjelajahan ruang baru dan pematangan solusi lokal sepenuhnya ditentukan di sini. Beta nol mengatur daya tarik dasar ketika dua individu berdekatan. Gamma mengatur seberapa cepat daya tarik melemah oleh jarak, sehingga menentukan apakah kunang-kunang akan menyatu dalam satu kelompok besar atau terpecah menjadi banyak kelompok lokal untuk menangani banyak lembah. Terakhir, alpha memberikan langkah acak agar individu tidak mandek dan tetap menjelajah. Ketiga parameter inilah motor penggerak Firefly sebelum kita bawa ke penjadwalan komputasi awan."
     ],
     "fa-cara": [
       "Langkah pertama, setiap kunang-kunang dihitung nilai fungsi tujuannya. Pada kasus kita nilainya makespan, dan makin kecil berarti makin terang.",

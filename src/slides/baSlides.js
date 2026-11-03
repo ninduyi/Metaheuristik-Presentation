@@ -489,7 +489,7 @@ const baCara = {
     </ol>
     <p>Dalam simulasi, urutan tiga tahap ini sama persis: Pulsa, Jelajah lokal, Terima.</p>`,
   mount(container, ctx) {
-    return mountStory(container, ctx, {
+    const cleanup = mountStory(container, ctx, {
       tag: '6 · Cara kerja Bat',
       trail: ['Pulsa menuju x*', 'Jelajah lokal', 'Terima atau tolak'],
       beats: [
@@ -497,8 +497,23 @@ const baCara = {
         { title: 'Kadang menjelajah di dekat x*', sub: 'Bila rand > r, titik percobaan diganti titik acak sekitar x*.' },
         { title: 'Hanya yang lolos yang berpindah', sub: 'Harus lebih baik dan lolos peluang kenyaringan A.' }
       ],
-      draw: makeBatHowDraw()
+      draw: makeBatHowDraw(),
+      extraHtml: `
+        <a id="btn-bat-3d" class="btn-bat-3d" target="_blank" rel="noopener noreferrer" title="Dunia Baty 3D - Bat Algorithm Echolocation Swarm">
+          <span class="badge-3d">3D</span>
+          <span class="label-3d">Dunia Baty</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </a>`
     });
+    const link = container.querySelector('#btn-bat-3d');
+    if (link) {
+      link.href = 'https://ninduyi.github.io/tes/';
+    }
+    return cleanup;
   }
 };
 

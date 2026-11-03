@@ -280,6 +280,66 @@
 .book-use { margin: 0; color: #dfe9ff; font-size: 21px; line-height: 1.4; }
 .book-use strong { color: var(--accent); }
 
+/* ---------- Tombol Tautan 3D (Slide Bat) ---------- */
+
+.btn-bat-3d {
+  position: absolute;
+  top: 34px;
+  left: calc(50% + 160px);
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px 0 10px;
+  border: 1px solid rgba(167, 139, 250, 0.55);
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.16);
+  backdrop-filter: blur(12px);
+  color: #f3effe;
+  font-family: var(--font-body);
+  font-size: 19px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 4px 20px rgba(167, 139, 250, 0.25);
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.btn-bat-3d:hover {
+  transform: translateY(-2px);
+  background: rgba(167, 139, 250, 0.32);
+  border-color: #c4b5fd;
+  color: #ffffff;
+  box-shadow: 0 8px 28px rgba(167, 139, 250, 0.45);
+}
+.btn-bat-3d .badge-3d {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px;
+  border-radius: 8px;
+  background: #a78bfa;
+  color: #0b0f1d;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+.btn-bat-3d .label-3d {
+  letter-spacing: 0.02em;
+}
+.btn-bat-3d svg {
+  width: 17px;
+  height: 17px;
+  opacity: 0.85;
+  transition: transform 160ms ease;
+}
+.btn-bat-3d:hover svg {
+  transform: translate(2px, -2px);
+  opacity: 1;
+}
+
 /* ---------- Kertas naskah (presenter) ---------- */
 
 .paper {

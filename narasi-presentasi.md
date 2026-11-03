@@ -6,7 +6,7 @@ Dihasilkan otomatis dari catatan presenter di tiap slide.
 
 ### Naskah yang diucapkan
 
-Halo semuanya. Hari ini saya akan membahas dua algoritma yang terinspirasi dari alam, yaitu Firefly Algorithm dan Bat Algorithm, dan bagaimana keduanya dipakai untuk menjadwalkan tugas di cloud. Sebelum masuk ke rumus, kita lihat dulu gambarnya. Tiap konsep akan saya tunjukkan lewat animasi dan simulasi yang bisa dijalankan langsung di slide ini.
+Selamat pagi rekan-rekan dan Bapak Ibu dosen. Pada presentasi kali ini, kami akan membedah strategi optimasi komputasi awan melalui komparasi dua metaheuristik berbasis alam, yaitu Firefly Algorithm dan Bat Algorithm, untuk memecahkan persoalan penjadwalan tugas komputasi awan. Melalui visualisasi interaktif dan simulasi komparatif langsung, kita akan menelaah bagaimana kedua algoritma ini bekerja, bagaimana perilakunya menyeimbangkan eksplorasi dan eksploitasi, serta efektivitasnya dalam meminimalkan waktu penyelesaian atau makespan.
 
 ### Catatan teknis
 
@@ -14,17 +14,15 @@ Sapa audiens. Mulai dari pertanyaan sehari-hari: kalau ada banyak pekerjaan dan 
 
     Hari ini kita bandingkan dua jawaban dari alam: kunang-kunang (Firefly Algorithm) dan kelelawar (Bat Algorithm). Keduanya diuji pada beban kerja dan fungsi tujuan yang sama.
 
-    Klik baris nama di bawah judul untuk mengisi nama kelompok. Isinya tersimpan otomatis di browser ini.
-
 ## 2. Masalah penjadwalan
 
 ### Naskah yang diucapkan
 
-**Beat 1.** Bayangkan ada enam belas tugas dengan panjang yang berbeda-beda, lalu ada empat mesin virtual yang kecepatannya juga tidak sama, dari 85 sampai 175 MIPS. Pertanyaan intinya sederhana. Tugas mana sebaiknya ditaruh di mesin mana. Waktu kerja satu tugas dihitung dari panjang tugas dibagi kecepatan mesin.
+**Beat 1.** Latar belakang masalah berakar dari alokasi sumber daya di pusat data komputasi awan. Kita menghadapi enam belas tugas dengan beban instruksi berbeda, yang harus dialokasikan ke empat mesin virtual heterogen dengan kapasitas 85 hingga 175 MIPS. Waktu pemrosesan setiap tugas berbanding lurus dengan panjang instruksi dibagi kecepatan mesin virtual tujuan, sehingga keputusan penempatan tugas menjadi penentu utama efisiensi komputasi.
 
-**Beat 2.** Cara paling gampang adalah Round-Robin, yaitu tugas dibagi bergiliran. Kelihatannya adil karena jumlahnya sama, tapi mesin yang paling lambat ikut kebagian jatah yang sama sehingga selesai paling akhir. Waktu selesai mesin terakhir inilah yang kita sebut makespan. Di sini Round-Robin berada sekitar 51 persen di atas batas bawah ideal, yaitu garis hijau.
+**Beat 2.** Pendekatan konvensional seperti Round-Robin membagi tugas secara merata bergiliran. Meski terkesan adil dari kuantitas tugas, strategi ini mengabaikan heterogenitas kecepatan mesin, sehingga mesin terlambat menyelesaikan beban paling lama. Waktu selesai mesin paling lambat inilah yang kita definisikan sebagai makespan. Pada simulasi ini, makespan Round-Robin terpaut jauh sekitar 51 persen di atas batas bawah ideal, yang ditunjukkan oleh garis hijau.
 
-**Beat 3.** Mungkin ada yang berpikir, coba saja semua kemungkinan. Masalahnya, tiap tugas punya empat pilihan mesin, jadi setiap tugas tambahan melipatkan jumlah jadwal empat kali. Pohon ini baru sampai tugas keempat dan sudah ada dua ratus lima puluh enam cabang. Untuk enam belas tugas, jumlahnya sekitar 4,3 miliar jadwal. Kalau satu jadwal dicek dalam satu milidetik, kita butuh hampir lima puluh hari nonstop. Karena itu kita perlu pencari yang cerdas, bukan pencoba semua.
+**Beat 3.** Mencari jadwal optimal dengan memeriksa seluruh kemungkinan kombinasi secara brute force terbukti mustahil karena terjadi ledakan kombinatorial. Setiap penambahan tugas melipatgandakan ruang solusi empat kali lipat, sehingga enam belas tugas menghasilkan lebih dari 4,29 miliar kombinasi jadwal. Jika satu jadwal dievaluasi dalam satu milidetik, penelusuran menyeluruh memakan waktu hampir lima puluh hari nonstop. Inilah alasan mengapa kita memerlukan algoritma metaheuristik cerdas yang mampu menemukan solusi mendekati optimal secara efisien.
 
 ### Catatan teknis
 
@@ -70,23 +68,23 @@ Beat 1. Kunang-kunang menyala untuk menarik pasangan dan mangsa. Setiap kunang-k
 
     Beat 3. Aturan kedua: kunang-kunang yang lebih redup terbang mendekati yang lebih terang. Semakin jauh jaraknya, semakin lemah tarikannya karena cahaya meredup di udara. Itulah dua aturan inti Firefly Algorithm (Yang, 2009).
 
-## 5. Firefly: tiga tombol pengatur
+## 5. Firefly: parameter algoritma
 
 ### Naskah yang diucapkan
 
-Ada tiga tombol pengatur di Firefly. Beta nol menentukan kuat tarikan saat jaraknya nol. Gamma menentukan seberapa cepat tarikan hilang karena jarak. Alpha mengatur lebar langkah acak setelah terbang. Saya geser slider-nya sekarang, dan kurva serta peragaan geraknya langsung ikut berubah. Kursor bisa digerakkan di grafik untuk memilih jarak tertentu.
+Slide ini menjelaskan tiga parameter utama yang mengendalikan seluruh perilaku Firefly Algorithm, yaitu beta nol, gamma, dan alpha. Pemahaman ketiga parameter ini sangat penting karena keseimbangan antara penjelajahan ruang baru dan pematangan solusi lokal sepenuhnya ditentukan di sini. Beta nol mengatur daya tarik dasar ketika dua individu berdekatan. Gamma mengatur seberapa cepat daya tarik melemah oleh jarak, sehingga menentukan apakah kunang-kunang akan menyatu dalam satu kelompok besar atau terpecah menjadi banyak kelompok lokal untuk menangani banyak lembah. Terakhir, alpha memberikan langkah acak agar individu tidak mandek dan tetap menjelajah. Ketiga parameter inilah motor penggerak Firefly sebelum kita bawa ke penjadwalan komputasi awan.
 
 ### Catatan teknis
 
-Slide ini boleh dimainkan langsung. Geser slider dan lihat kurva berubah.
+Mengapa slide ini perlu dijelaskan: Seluruh dinamika pencarian Firefly Algorithm bertumpu pada formula daya tarik optik: &beta;(r) = &beta;0 e-&gamma; r2. Tanpa memahami tiga parameter ini, kita tidak bisa memahami bagaimana algoritma menyeimbangkan eksplorasi (mencari wilayah baru) dan eksploitasi (memperdalam solusi yang sudah ditemukan), serta mengapa Firefly mampu membagi diri menjadi beberapa kelompok (sub-swarms) secara alami.
 
-- β₀: daya tarik saat dua kunang-kunang berdekatan. Besar berarti langsung menempel.
+- &beta;₀ (Daya Tarik Dasar): Kekuatan tarikan saat jarak antarkunang-kunang bernilai nol (r = 0). Nilai ini menentukan seberapa agresif kunang-kunang mendekati tetangganya yang lebih terang ketika posisinya berdekatan.
 
-- γ: peredam jarak. γ kecil, tarikan terasa dari jauh (satu kelompok besar). γ besar, tarikan hanya terasa dari dekat (banyak kelompok kecil, lebih menjelajah).
+- &gamma; (Koefisien Penyerapan Media / Peredam Jarak): Mengontrol seberapa cepat cahaya dan daya tarik meredup seiring pertambahan jarak. Jika &gamma; kecil (&rarr; 0), cahaya menembus jauh sehingga semua kunang-kunang saling tertarik ke satu arah (mirip PSO). Jika &gamma; besar, daya tarik hanya bekerja pada jarak sangat dekat, memungkinkan terbentuknya banyak kluster lokal untuk memetakan ruang pencarian multimodal tanpa terjebak pada satu puncak semu.
 
-- α: lebar langkah acak. Besar berarti banyak jelajah, kecil berarti hasil rapi. Nilainya menyusut tiap iterasi dalam simulasi.
+- &alpha; (Parameter Keacakan / Langkah Acak): Memberikan perturbasi stokastik setelah individu tertarik terbang. Ini mencegah konvergensi dini dan menjaga diversitas populasi. Pada implementasi simulasi, nilai &alpha; perlahan diturunkan (annealing) agar pencarian di akhir iterasi lebih halus dan fokus.
 
-    Jarak r di sini dinormalkan ke 0 sampai 1 (lebar ruang pencarian), jadi γ berarti sama di peta 2D maupun jadwal 16 tugas.
+    Konteks ke Penjadwalan Cloud: Jarak r di slide ini dinormalkan ke rentang [0, 1] terhadap skala ruang pencarian. Konsep yang sama nantinya langsung dipetakan ke koordinat vektor tugas penjadwalan cloud 16 tugas dan 4 VM.
 
 ## 6. Firefly: cara kerja
 
