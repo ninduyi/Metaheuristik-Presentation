@@ -26,7 +26,7 @@ export function mountLab(root, { reducedMotion, registerHooks }, spec) {
       <header class="plate">
         <span class="plate-tag"><i></i>${spec.tag}</span>
         <h1 class="plate-title">${spec.title}</h1>
-        <p class="plate-sub">${spec.intro || ''}</p>
+        <p class="plate-sub">${spec.intro}</p>
       </header>
       <canvas class="labx-cv" id="lab-canvas"></canvas>
       <div class="faders">

@@ -29,7 +29,7 @@ import { CH, FA_COLOR } from './chapters.js';
 
 const FOOD = { x: 1480, y: 700 };
 const N_FLY = 22;
-const BOX = { x: 120, y: 340, w: 1700, h: 600 };
+const BOX = { x: 180, y: 340, w: 1640, h: 600 };
 
 function quality(p) {
   const d = Math.hypot(p.x - FOOD.x, p.y - FOOD.y);
@@ -299,21 +299,21 @@ function drawFaCharacter(ctx, { t }, p, pointer) {
 const faKarakter = {
   id: 'fa-karakter',
   chapter: CH.firefly,
-  title: 'Firefly: parameter algoritma',
+  title: 'Firefly: tiga tombol pengatur',
   notes: `
-    <p><b>Mengapa slide ini perlu dijelaskan:</b> Seluruh dinamika pencarian Firefly Algorithm bertumpu pada formula daya tarik optik: &beta;(r) = &beta;<sub>0</sub> e<sup>-&gamma; r<sup>2</sup></sup>. Tanpa memahami tiga parameter ini, kita tidak bisa memahami bagaimana algoritma menyeimbangkan eksplorasi (mencari wilayah baru) dan eksploitasi (memperdalam solusi yang sudah ditemukan), serta mengapa Firefly mampu membagi diri menjadi beberapa kelompok (sub-swarms) secara alami.</p>
+    <p>Slide ini boleh dimainkan langsung. Geser slider dan lihat kurva berubah.</p>
     <ul>
-      <li><b>&beta;₀ (Daya Tarik Dasar):</b> Kekuatan tarikan saat jarak antarkunang-kunang bernilai nol (r = 0). Nilai ini menentukan seberapa agresif kunang-kunang mendekati tetangganya yang lebih terang ketika posisinya berdekatan.</li>
-      <li><b>&gamma; (Koefisien Penyerapan Media / Peredam Jarak):</b> Mengontrol seberapa cepat cahaya dan daya tarik meredup seiring pertambahan jarak. Jika &gamma; kecil (&rarr; 0), cahaya menembus jauh sehingga semua kunang-kunang saling tertarik ke satu arah (mirip PSO). Jika &gamma; besar, daya tarik hanya bekerja pada jarak sangat dekat, memungkinkan terbentuknya banyak kluster lokal untuk memetakan ruang pencarian multimodal tanpa terjebak pada satu puncak semu.</li>
-      <li><b>&alpha; (Parameter Keacakan / Langkah Acak):</b> Memberikan perturbasi stokastik setelah individu tertarik terbang. Ini mencegah konvergensi dini dan menjaga diversitas populasi. Pada implementasi simulasi, nilai &alpha; perlahan diturunkan (annealing) agar pencarian di akhir iterasi lebih halus dan fokus.</li>
+      <li><b>β₀</b>: daya tarik saat dua kunang-kunang berdekatan. Besar berarti langsung menempel.</li>
+      <li><b>γ</b>: peredam jarak. γ kecil, tarikan terasa dari jauh (satu kelompok besar). γ besar, tarikan hanya terasa dari dekat (banyak kelompok kecil, lebih menjelajah).</li>
+      <li><b>α</b>: lebar langkah acak. Besar berarti banyak jelajah, kecil berarti hasil rapi. Nilainya menyusut tiap iterasi dalam simulasi.</li>
     </ul>
-    <p><b>Konteks ke Penjadwalan Cloud:</b> Jarak r di slide ini dinormalkan ke rentang [0, 1] terhadap skala ruang pencarian. Konsep yang sama nantinya langsung dipetakan ke koordinat vektor tugas penjadwalan cloud 16 tugas dan 4 VM.</p>`,
+    <p>Jarak r di sini dinormalkan ke 0 sampai 1 (lebar ruang pencarian), jadi γ berarti sama di peta 2D maupun jadwal 16 tugas.</p>`,
   mount(container, ctx) {
     return mountLab(container, ctx, {
       tag: '3 · Firefly Algorithm',
-      title: 'Parameter Algoritma Firefly',
+      title: 'Tiga tombol pengatur',
       color: FA_COLOR,
-      intro: '',
+      intro: 'Coba geser. Kurva dan peragaan gerak langsung ikut berubah.',
       sliders: [
         { key: 'beta0', label: 'β₀ daya tarik dasar', min: 0.2, max: 1.5, step: 0.05, value: 1, desc: 'Seberapa kuat tarikan saat jarak nol.' },
         { key: 'gamma', label: 'γ peredam jarak', min: 0, max: 10, step: 0.1, value: 2, desc: 'Makin besar, makin cepat tarikan lenyap oleh jarak.' },
@@ -326,7 +326,7 @@ const faKarakter = {
 
 /* ---------- Cara kerja ---------- */
 
-const PANEL = { x: 640, y: 330, w: 1240, h: 660 };
+const PANEL = { x: 660, y: 330, w: 1210, h: 660 };
 const SPHERE = landscapeById('sphere');
 const DEMO_GAMMA = 2;
 const DEMO_SPAN = SPHERE.max - SPHERE.min;

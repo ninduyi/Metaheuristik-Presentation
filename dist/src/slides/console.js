@@ -136,6 +136,7 @@ export function mountConsole(root, { reducedMotion, registerHooks }, spec) {
         <i class="dock-sep"></i>
         <div class="seg" id="${id}-objectives">${objectiveButtonsHtml('rastrigin')}</div>
         <i class="dock-sep"></i>
+        <button type="button" class="dock-btn dock-3d-btn" id="${id}-3d-btn" title="${id === 'ba' ? 'Buka Dunia Baty 3D' : id === 'fa' ? 'Buka Simulasi Firefly 3D' : 'Buka Medan 3D'}"><span>${id === 'ba' ? '🦇 3D' : id === 'fa' ? '💡 3D' : '🏔️ 3D'}</span></button>
         ${dockButton(`${id}-params-toggle`, ICONS.gear, 'Parameter')}
       </div>
 
@@ -152,6 +153,16 @@ export function mountConsole(root, { reducedMotion, registerHooks }, spec) {
   const phaseItems = [...root.querySelectorAll('.hud-phases li')];
   const objectiveBtns = [...root.querySelectorAll(`#${id}-objectives .seg-btn`)];
   wireDrawer(root, id);
+
+  $(`#${id}-3d-btn`)?.addEventListener('click', () => {
+    if (id === 'ba') {
+      window.location.href = 'https://ninduyi.github.io/tes/';
+    } else if (id === 'fa') {
+      window.location.href = 'https://raraa17.github.io/firefly-algorithm/';
+    } else {
+      window.__aoeHud?.landscapeChooser?.open();
+    }
+  });
 
   let landscape = landscapeById('rastrigin');
   let rate = START_RATE;

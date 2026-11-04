@@ -31,7 +31,7 @@ import { CH, BA_COLOR } from './chapters.js';
 /* ---------- Inspirasi ---------- */
 
 const PREY = { x: 1500, y: 690 };
-const BOX = { x: 120, y: 340, w: 1700, h: 600 };
+const BOX = { x: 180, y: 340, w: 1640, h: 600 };
 
 function drawPrey(ctx, t, glow = 0.5) {
   const x = PREY.x + Math.sin(t * 1.3) * 12;
@@ -293,7 +293,7 @@ const baKarakter = {
 
 /* ---------- Cara kerja ---------- */
 
-const PANEL = { x: 640, y: 330, w: 1240, h: 660 };
+const PANEL = { x: 660, y: 330, w: 1210, h: 660 };
 const SPHERE = landscapeById('sphere');
 const A_DEMO = 0.9;
 const R_DEMO = 0.3;
@@ -489,7 +489,7 @@ const baCara = {
     </ol>
     <p>Dalam simulasi, urutan tiga tahap ini sama persis: Pulsa, Jelajah lokal, Terima.</p>`,
   mount(container, ctx) {
-    const cleanup = mountStory(container, ctx, {
+    return mountStory(container, ctx, {
       tag: '6 · Cara kerja Bat',
       trail: ['Pulsa menuju x*', 'Jelajah lokal', 'Terima atau tolak'],
       beats: [
@@ -497,23 +497,8 @@ const baCara = {
         { title: 'Kadang menjelajah di dekat x*', sub: 'Bila rand > r, titik percobaan diganti titik acak sekitar x*.' },
         { title: 'Hanya yang lolos yang berpindah', sub: 'Harus lebih baik dan lolos peluang kenyaringan A.' }
       ],
-      draw: makeBatHowDraw(),
-      extraHtml: `
-        <a id="btn-bat-3d" class="btn-bat-3d" target="_blank" rel="noopener noreferrer" title="Dunia Baty 3D - Bat Algorithm Echolocation Swarm">
-          <span class="badge-3d">3D</span>
-          <span class="label-3d">Dunia Baty</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-            <polyline points="15 3 21 3 21 9"/>
-            <line x1="10" y1="14" x2="21" y2="3"/>
-          </svg>
-        </a>`
+      draw: makeBatHowDraw()
     });
-    const link = container.querySelector('#btn-bat-3d');
-    if (link) {
-      link.href = 'https://ninduyi.github.io/tes/';
-    }
-    return cleanup;
   }
 };
 
